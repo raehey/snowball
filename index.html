@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DRIP 시뮬레이터">
+<meta name="theme-color" content="#0D0D0D">
+<link rel="manifest" href="manifest.json">
+<title>DRIP 시뮬레이터 — 배당주 복리 재투자</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0D0D0D;--card:#1A1A1A;--card2:#222;--border:#333;
+  --gold:#FFD700;--gold2:#FFC107;--gold-dim:rgba(255,215,0,.15);
+  --text:#fff;--text2:#aaa;--text3:#666;
+  --green:#4CAF50;--red:#FF5252;--blue:#4A90D9;--purple:#9B59B6;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased;padding-bottom:env(safe-area-inset-bottom)}
+.container{max-width:500px;margin:0 auto;padding:16px}
+h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
+.subtitle{text-align:center;color:var(--text2);font-size:13px;margin-bottom:20px}
+
+/* 입력 섹션 */
+.section{background:var(--card);border-radius:16px;padding:20px;margin-bottom:16px}
+.section-title{font-size:14px;color:var(--text2);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.amount-input-wrap{position:relative}
+.amount-input{width:100%;background:var(--card2);border:2px solid var(--border);border-radius:12px;padding:16px;font-size:24px;color:var(--gold);text-align:right;font-weight:700;font-family:'SF Mono',monospace;outline:none;transition:border-color .2s}
+.amount-input:focus{border-color:var(--gold)}
+.amount-unit{position:absolute;right:16px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:14px;pointer-events:none}
+.quick-amounts{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.quick-btn{flex:1;min-width:70px;padding:8px 4px;background:var(--card2);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-size:12px;cursor:pointer;text-align:center;transition:all .2s}
+.quick-btn:active,.quick-btn:hover{background:var(--gold-dim);border-color:var(--gold);color:var(--gold)}
+
+/* 성향 선택 */
+.style-btns{display:flex;gap:10px}
+.style-btn{flex:1;padding:14px 8px;background:var(--card2);border:2px solid var(--border);border-radius:14px;cursor:pointer;text-align:center;transition:all .2s}
+.style-btn .emoji{font-size:24px;display:block;margin-bottom:4px}
+.style-btn .label{font-size:13px;font-weight:600;color:var(--text2)}
+.style-btn .desc{font-size:10px;color:var(--text3);margin-top:2px}
+.style-btn.active{border-color:var(--gold);background:var(--gold-dim)}
+.style-btn.active .label{color:var(--gold)}
+.style-btn.s-con.active{border-color:var(--blue)}
+.style-btn.s-con.active .label{color:var(--blue)}
+.style-btn.s-agg.active{border-color:var(--red)}
+.style-btn.s-agg.active .label{color:var(--red)}
+
+/* 시뮬레이션 버튼 */
+.sim-btn{width:100%;padding:16px;background:var(--gold);border:none;border-radius:14px;font-size:17px;font-weight:700;color:#000;cursor:pointer;margin-bottom:16px;transition:opacity .2s}
+.sim-btn:active{opacity:.8}
+
+/* 결과 카드 */
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.result-card{background:var(--card);border-radius:14px;padding:16px}
+.result-card .rc-label{font-size:11px;color:var(--text2)}
+.result-card .rc-value{font-size:22px;font-weight:700;margin-top:4px;font-family:'SF Mono',monospace}
+.result-card .rc-sub{font-size:11px;color:var(--green);margin-top:2px}
+.result-card.highlight{border:1px solid var(--gold)}
+.result-card.highlight .rc-value{color:var(--gold)}
+
+/* 종목 카드 */
+.stock-card{background:var(--card);border-radius:14px;padding:16px;margin-bottom:10px}
+.stock-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.stock-ticker{font-size:16px;font-weight:700;color:var(--gold)}
+.stock-badge{font-size:10px;padding:3px 8px;border-radius:6px;background:var(--gold-dim);color:var(--gold)}
+.stock-info{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;color:var(--text2)}
+.stock-info span{color:var(--text)}
+.stock-shares{margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:13px;display:flex;justify-content:space-between}
+.stock-shares .arrow{color:var(--green)}
+
+/* 차트 */
+.chart-tabs{display:flex;gap:6px;margin-bottom:12px}
+.chart-tab{flex:1;padding:8px;background:var(--card2);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-size:12px;cursor:pointer;text-align:center;transition:all .2s}
+.chart-tab.active{background:var(--gold-dim);border-color:var(--gold);color:var(--gold)}
+.chart-canvas{width:100%;height:220px;border-radius:12px;background:var(--card2)}
+
+/* 연도별 테이블 */
+.yearly-table{width:100%;border-collapse:collapse;font-size:12px}
+.yearly-table th{color:var(--text2);font-weight:500;padding:10px 6px;text-align:right;border-bottom:1px solid var(--border)}
+.yearly-table th:first-child{text-align:left}
+.yearly-table td{padding:10px 6px;text-align:right;border-bottom:1px solid var(--border);font-family:'SF Mono',monospace;color:var(--text)}
+.yearly-table td:first-child{text-align:left;color:var(--text2);font-family:inherit}
+.yearly-table tr:last-child td{border-bottom:none;color:var(--gold);font-weight:600}
+
+/* 고급 옵션 */
+.adv-toggle{display:flex;justify-content:space-between;align-items:center;padding:14px 0;cursor:pointer;color:var(--text2);font-size:13px}
+.adv-toggle .chevron{transition:transform .3s}
+.adv-toggle.open .chevron{transform:rotate(180deg)}
+.adv-body{max-height:0;overflow:hidden;transition:max-height .3s ease}
+.adv-body.open{max-height:600px}
+.adv-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid var(--border)}
+.adv-row label{font-size:13px;color:var(--text2)}
+.adv-input{width:100px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:14px;text-align:right;outline:none}
+.adv-input:focus{border-color:var(--gold)}
+.switch{position:relative;width:44px;height:24px;cursor:pointer}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;top:0;left:0;right:0;bottom:0;background:var(--border);border-radius:12px;transition:.3s}
+.slider:before{content:'';position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
+.switch input:checked+.slider{background:var(--gold)}
+.switch input:checked+.slider:before{transform:translateX(20px)}
+
+/* 하단 정보 */
+.footer-info{text-align:center;padding:20px 0 40px;font-size:11px;color:var(--text3);line-height:1.8}
+
+/* 기간 선택 */
+.period-btns{display:flex;gap:8px;margin-top:10px}
+.period-btn{flex:1;padding:8px;background:var(--card2);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-size:13px;cursor:pointer;text-align:center;transition:all .2s}
+.period-btn.active{background:var(--gold-dim);border-color:var(--gold);color:var(--gold)}
+
+.hidden{display:none}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>💰 DRIP 시뮬레이터</h1>
+  <p class="subtitle">배당주 복리 재투자 시뮬레이션</p>
+
+  <!-- 투자금액 입력 -->
+  <div class="section">
+    <div class="section-title">투자 금액</div>
+    <div class="amount-input-wrap">
+      <input type="text" id="amountInput" class="amount-input" value="50,000,000" inputmode="numeric">
+    </div>
+    <div class="quick-amounts">
+      <div class="quick-btn" onclick="setAmount(10000000)">1천만</div>
+      <div class="quick-btn" onclick="setAmount(30000000)">3천만</div>
+      <div class="quick-btn" onclick="setAmount(50000000)">5천만</div>
+      <div class="quick-btn" onclick="setAmount(100000000)">1억</div>
+      <div class="quick-btn" onclick="setAmount(300000000)">3억</div>
+    </div>
+  </div>
+
+  <!-- 투자 성향 -->
+  <div class="section">
+    <div class="section-title">투자 성향</div>
+    <div class="style-btns">
+      <div class="style-btn s-con" onclick="selectStyle('conservative')" id="btn-conservative">
+        <span class="emoji">🛡</span>
+        <div class="label">안정형</div>
+        <div class="desc">원금 보존</div>
+      </div>
+      <div class="style-btn active" onclick="selectStyle('balanced')" id="btn-balanced">
+        <span class="emoji">⚖️</span>
+        <div class="label">균형형</div>
+        <div class="desc">배당+성장</div>
+      </div>
+      <div class="style-btn s-agg" onclick="selectStyle('aggressive')" id="btn-aggressive">
+        <span class="emoji">🚀</span>
+        <div class="label">공격형</div>
+        <div class="desc">고배당</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 시뮬레이션 기간 -->
+  <div class="section">
+    <div class="section-title">시뮬레이션 기간</div>
+    <div class="period-btns">
+      <div class="period-btn" onclick="setPeriod(5)">5년</div>
+      <div class="period-btn active" onclick="setPeriod(10)" id="period-10">10년</div>
+      <div class="period-btn" onclick="setPeriod(15)">15년</div>
+      <div class="period-btn" onclick="setPeriod(20)">20년</div>
+    </div>
+  </div>
+
+  <!-- 고급 옵션 -->
+  <div class="section">
+    <div class="adv-toggle" onclick="toggleAdvanced()" id="advToggle">
+      <span>⚙️ 고급 옵션</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="adv-body" id="advBody">
+      <div class="adv-row">
+        <label>배당 성장률 (%/년)</label>
+        <input type="text" class="adv-input" id="divGrowth" value="0" inputmode="decimal">
+      </div>
+      <div class="adv-row">
+        <label>주가 성장률 (%/년)</label>
+        <input type="text" class="adv-input" id="priceGrowth" value="0" inputmode="decimal">
+      </div>
+      <div class="adv-row">
+        <label>연 추가투자 (만원)</label>
+        <input type="text" class="adv-input" id="annualContrib" value="0" inputmode="numeric">
+      </div>
+      <div class="adv-row">
+        <label>배당 재투자 (DRIP)</label>
+        <label class="switch"><input type="checkbox" id="dripToggle" checked><span class="slider"></span></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- 시뮬레이션 버튼 -->
+  <button class="sim-btn" onclick="runSimulation()">시뮬레이션 시작 🔥</button>
+
+  <!-- 결과 영역 -->
+  <div id="results" class="hidden">
+    <!-- 핵심 숫자 -->
+    <div class="result-grid" id="resultCards"></div>
+
+    <!-- 종목 상세 -->
+    <div id="stockCards"></div>
+
+    <!-- 차트 -->
+    <div class="section">
+      <div class="chart-tabs" id="chartTabs">
+        <div class="chart-tab active" onclick="switchChart(0)">자산 성장</div>
+        <div class="chart-tab" onclick="switchChart(1)">월 배당금</div>
+        <div class="chart-tab" onclick="switchChart(2)">주식 수</div>
+      </div>
+      <canvas id="chartCanvas" class="chart-canvas"></canvas>
+    </div>
+
+    <!-- 연도별 테이블 -->
+    <div class="section">
+      <div class="section-title">📊 연도별 요약</div>
+      <table class="yearly-table" id="yearlyTable"></table>
+    </div>
+  </div>
+
+  <!-- 하단 -->
+  <div class="footer-info">
+    환율: 1 USD = 1,370원 (고정)<br>
+    배당소득세: 15.4% 적용<br>
+    주가·배당률 고정 가정 (MVP)<br><br>
+    ⚠️ 본 시뮬레이션은 참고용이며<br>투자 수익을 보장하지 않습니다.
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// 데이터 & 엔진 (TypeScript → JS 변환)
+// ═══════════════════════════════════════════
+const TAX_RATE = 0.154;
+const EXCHANGE_RATE = 1370;
+
+const STOCKS = {
+  SCHD: { ticker:'SCHD', price:28*EXCHANGE_RATE, dividendYield:0.035, frequency:'quarterly', nameKo:'슈드', desc:'배당 성장 + 가치주' },
+  JEPQ: { ticker:'JEPQ', price:57*EXCHANGE_RATE, dividendYield:0.095, frequency:'monthly', nameKo:'제이펙큐', desc:'나스닥 커버드콜' },
+  JEPI: { ticker:'JEPI', price:56*EXCHANGE_RATE, dividendYield:0.072, frequency:'monthly', nameKo:'제피', desc:'S&P500 커버드콜' },
+  VYM:  { ticker:'VYM',  price:128*EXCHANGE_RATE, dividendYield:0.028, frequency:'quarterly', nameKo:'뱅가드 고배당', desc:'대형주 400종 분산' },
+  DGRO: { ticker:'DGRO', price:61*EXCHANGE_RATE, dividendYield:0.024, frequency:'quarterly', nameKo:'디그로', desc:'배당 성장률 상위' },
+  VIG:  { ticker:'VIG',  price:192*EXCHANGE_RATE, dividendYield:0.018, frequency:'quarterly', nameKo:'뱅가드 배당성장', desc:'10년+ 연속 증가' },
+  QYLD: { ticker:'QYLD', price:17*EXCHANGE_RATE, dividendYield:0.12, frequency:'monthly', nameKo:'큐일드', desc:'나스닥100 초고배당' },
+  XYLD: { ticker:'XYLD', price:40*EXCHANGE_RATE, dividendYield:0.10, frequency:'monthly', nameKo:'엑스일드', desc:'S&P500 초고배당' },
+  DIVO: { ticker:'DIVO', price:36*EXCHANGE_RATE, dividendYield:0.048, frequency:'monthly', nameKo:'디보', desc:'우량배당+커버드콜' },
+  HDV:  { ticker:'HDV',  price:112*EXCHANGE_RATE, dividendYield:0.034, frequency:'quarterly', nameKo:'에이치디브이', desc:'고배당 방어주' },
+  SPYD: { ticker:'SPYD', price:42*EXCHANGE_RATE, dividendYield:0.043, frequency:'quarterly', nameKo:'스파이디', desc:'S&P500 고배당 80종' },
+  DVY:  { ticker:'DVY',  price:130*EXCHANGE_RATE, dividendYield:0.033, frequency:'quarterly', nameKo:'디브이와이', desc:'다우존스 고배당' }
+};
+
+const PRESETS = {
+  conservative: [{ticker:'SCHD',weight:.60},{ticker:'DGRO',weight:.20},{ticker:'VYM',weight:.20}],
+  balanced:     [{ticker:'JEPQ',weight:.40},{ticker:'SCHD',weight:.40},{ticker:'VIG',weight:.20}],
+  aggressive:   [{ticker:'JEPQ',weight:.50},{ticker:'JEPI',weight:.30},{ticker:'SCHD',weight:.20}]
+};
+
+// ─── 계산 엔진 ───
+function isDividendMonth(freq, month) {
+  if (freq === 'monthly') return true;
+  if (freq === 'quarterly') return month % 3 === 0;
+  if (freq === 'annually') return month % 12 === 0;
+  return false;
+}
+
+function simulate(capital, style, years, opts) {
+  const preset = PRESETS[style];
+  const { divGrowth=0, priceGrowth=0, annualContrib=0, enableDRIP=true } = opts;
+
+  // 초기 상태
+  const states = preset.map(p => {
+    const stock = STOCKS[p.ticker];
+    const alloc = capital * p.weight;
+    const shares = Math.floor(alloc / stock.price);
+    const cash = alloc - shares * stock.price;
+    return {
+      ticker: p.ticker, weight: p.weight,
+      stock: { ...stock },
+      initShares: shares, shares, cash,
+      currentPrice: stock.price,
+      currentYield: stock.dividendYield
+    };
+  });
+
+  const records = [];
+  let cumGross = 0, cumNet = 0;
+
+  for (let month = 1; month <= years * 12; month++) {
+    const yearIdx = Math.floor((month - 1) / 12);
+
+    // 연간 성장률 적용 (2년차부터)
+    if (month > 1 && (month - 1) % 12 === 0) {
+      for (const s of states) {
+        if (priceGrowth > 0)
+          s.currentPrice = s.stock.price * Math.pow(1 + priceGrowth, yearIdx);
+        if (divGrowth > 0) {
+          const dFactor = Math.pow(1 + divGrowth, yearIdx);
+          const pFactor = priceGrowth > 0 ? Math.pow(1 + priceGrowth, yearIdx) : 1;
+          s.currentYield = s.stock.dividendYield * (dFactor / pFactor);
+        }
+      }
+    }
+
+    // 추가 투자
+    const monthlyContrib = annualContrib > 0 ? annualContrib / 12 : 0;
+
+    let mGross = 0, mNet = 0;
+    const snaps = [];
+
+    for (const s of states) {
+      if (monthlyContrib > 0) s.cash += monthlyContrib * s.weight;
+
+      // 배당금
+      let gross = 0;
+      if (isDividendMonth(s.stock.frequency, month)) {
+        const annual = s.shares * s.currentPrice * s.currentYield;
+        gross = s.stock.frequency === 'monthly' ? annual / 12 :
+                s.stock.frequency === 'quarterly' ? annual / 4 : annual;
+      }
+      const net = gross * (1 - TAX_RATE);
+      mGross += gross; mNet += net;
+
+      // 재투자
+      const avail = s.cash + net;
+      let newShares = 0;
+      if (enableDRIP) {
+        newShares = Math.floor(avail / s.currentPrice);
+        s.cash = avail - newShares * s.currentPrice;
+      } else {
+        s.cash = avail;
+      }
+      s.shares += newShares;
+
+      snaps.push({ ticker: s.ticker, shares: s.shares, gross, net, newShares, cash: s.cash, price: s.currentPrice, yield: s.currentYield });
+    }
+
+    cumGross += mGross; cumNet += mNet;
+    const totalAsset = states.reduce((sum, s) => sum + s.shares * s.currentPrice + s.cash, 0);
+
+    records.push({ month, year: Math.ceil(month / 12), snaps, mGross, mNet, cumGross, cumNet, totalAsset });
+  }
+
+  return { records, states };
+}
+
+// ─── DRIP OFF 비교용 ───
+function simulateNoDRIP(capital, style, years) {
+  return simulate(capital, style, years, { enableDRIP: false });
+}
+
+// ═══════════════════════════════════════════
+// UI 상태
+// ═══════════════════════════════════════════
+let currentStyle = 'balanced';
+let currentPeriod = 10;
+let currentChart = 0;
+let simResult = null;
+
+// ─── 금액 입력 ───
+const amountEl = document.getElementById('amountInput');
+amountEl.addEventListener('input', function() {
+  let v = this.value.replace(/[^0-9]/g, '');
+  if (v) this.value = Number(v).toLocaleString();
+});
+function setAmount(v) {
+  amountEl.value = v.toLocaleString();
+}
+function getAmount() {
+  return Number(amountEl.value.replace(/[^0-9]/g, '')) || 0;
+}
+
+// ─── 성향 선택 ───
+function selectStyle(s) {
+  currentStyle = s;
+  document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-' + s).classList.add('active');
+}
+
+// ─── 기간 선택 ───
+function setPeriod(y) {
+  currentPeriod = y;
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+// ─── 고급 옵션 ───
+function toggleAdvanced() {
+  const t = document.getElementById('advToggle');
+  const b = document.getElementById('advBody');
+  t.classList.toggle('open');
+  b.classList.toggle('open');
+}
+
+// ═══════════════════════════════════════════
+// 시뮬레이션 실행
+// ═══════════════════════════════════════════
+function runSimulation() {
+  const capital = getAmount();
+  if (capital < 100000) { alert('최소 10만원 이상 입력해주세요.'); return; }
+
+  const opts = {
+    divGrowth: parseFloat(document.getElementById('divGrowth').value) / 100 || 0,
+    priceGrowth: parseFloat(document.getElementById('priceGrowth').value) / 100 || 0,
+    annualContrib: (parseFloat(document.getElementById('annualContrib').value) || 0) * 10000,
+    enableDRIP: document.getElementById('dripToggle').checked
+  };
+
+  simResult = simulate(capital, currentStyle, currentPeriod, opts);
+  const noDripResult = simulateNoDRIP(capital, currentStyle, currentPeriod);
+
+  const final = simResult.records[simResult.records.length - 1];
+  const finalNoDrip = noDripResult.records[noDripResult.records.length - 1];
+  const dripEffect = final.totalAsset - finalNoDrip.totalAsset;
+  const returnRate = ((final.totalAsset - capital) / capital * 100).toFixed(1);
+
+  // 결과 카드
+  document.getElementById('resultCards').innerHTML = `
+    <div class="result-card highlight">
+      <div class="rc-label">${currentPeriod}년 후 총 자산</div>
+      <div class="rc-value">${fmtKRW(final.totalAsset)}</div>
+      <div class="rc-sub">+${returnRate}% 수익률</div>
+    </div>
+    <div class="result-card">
+      <div class="rc-label">월 배당금 (세후)</div>
+      <div class="rc-value">${fmtKRW(final.mNet)}</div>
+      <div class="rc-sub">세전 ${fmtKRW(final.mGross)}</div>
+    </div>
+    <div class="result-card">
+      <div class="rc-label">누적 배당금</div>
+      <div class="rc-value">${fmtKRW(final.cumNet)}</div>
+      <div class="rc-sub">세전 ${fmtKRW(final.cumGross)}</div>
+    </div>
+    <div class="result-card">
+      <div class="rc-label">DRIP 효과</div>
+      <div class="rc-value" style="color:var(--green)">+${fmtKRW(dripEffect)}</div>
+      <div class="rc-sub">미재투자 대비</div>
+    </div>
+  `;
+
+  // 종목 카드
+  let stockHTML = '';
+  for (const s of simResult.states) {
+    const stock = STOCKS[s.ticker];
+    const finalSnap = final.snaps.find(sn => sn.ticker === s.ticker);
+    const usdPrice = (stock.price / EXCHANGE_RATE).toFixed(2);
+    const monthlyNet = (s.shares * s.currentPrice * s.currentYield / 12 * (1 - TAX_RATE));
+    stockHTML += `
+      <div class="stock-card">
+        <div class="stock-header">
+          <span class="stock-ticker">${s.ticker}</span>
+          <span class="stock-badge">${stock.frequency === 'monthly' ? '월배당' : '분기배당'} ${(stock.dividendYield*100).toFixed(1)}%</span>
+        </div>
+        <div class="stock-info">
+          <div>${stock.nameKo}</div><div style="text-align:right">$${usdPrice} <span style="color:var(--text3)">(${fmtKRW(stock.price)})</span></div>
+          <div>비중 ${(s.weight*100).toFixed(0)}%</div><div style="text-align:right">월 세후 ${fmtKRW(monthlyNet)}</div>
+        </div>
+        <div class="stock-shares">
+          <span>${s.initShares}주 → ${finalSnap.shares}주</span>
+          <span class="arrow">+${finalSnap.shares - s.initShares}주 📈</span>
+        </div>
+      </div>`;
+  }
+  document.getElementById('stockCards').innerHTML = stockHTML;
+
+  // 연도별 테이블
+  let tableHTML = '<thead><tr><th>연차</th><th>월배당(세후)</th><th>총자산</th><th>증가율</th></tr></thead><tbody>';
+  for (const r of simResult.records) {
+    if (r.month % 12 !== 0) continue;
+    const rate = ((r.totalAsset - capital) / capital * 100).toFixed(1);
+    const isLast = r.month === currentPeriod * 12;
+    tableHTML += `<tr${isLast ? ' style="font-weight:700"' : ''}>
+      <td>${r.year}년</td><td>${fmtKRW(r.mNet)}</td><td>${fmtKRW(r.totalAsset)}</td><td style="color:var(--green)">+${rate}%</td>
+    </tr>`;
+  }
+  tableHTML += '</tbody>';
+  document.getElementById('yearlyTable').innerHTML = tableHTML;
+
+  // 차트 그리기
+  drawChart(currentChart);
+
+  // 결과 표시
+  document.getElementById('results').classList.remove('hidden');
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ═══════════════════════════════════════════
+// 차트
+// ═══════════════════════════════════════════
+function switchChart(idx) {
+  currentChart = idx;
+  document.querySelectorAll('.chart-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+  drawChart(idx);
+}
+
+function drawChart(type) {
+  if (!simResult) return;
+  const canvas = document.getElementById('chartCanvas');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+  const W = rect.width, H = rect.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const pad = { top: 30, right: 16, bottom: 36, left: 60 };
+  const cW = W - pad.left - pad.right;
+  const cH = H - pad.top - pad.bottom;
+
+  // 데이터 추출 (연간)
+  const yearly = simResult.records.filter(r => r.month % 12 === 0);
+  let data, label, color;
+
+  if (type === 0) {
+    data = yearly.map(r => r.totalAsset);
+    label = '총 자산'; color = '#FFD700';
+  } else if (type === 1) {
+    data = yearly.map(r => r.mNet);
+    label = '월 배당금(세후)'; color = '#4CAF50';
+  } else {
+    // 총 주식 수
+    data = yearly.map(r => r.snaps.reduce((s, sn) => s + sn.shares, 0));
+    label = '총 보유 주식'; color = '#4A90D9';
+  }
+
+  const maxV = Math.max(...data) * 1.1;
+  const minV = 0;
+
+  // Y축 그리드
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 0.5;
+  ctx.fillStyle = '#666';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.top + cH - (cH * i / 4);
+    const v = minV + (maxV - minV) * i / 4;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
+    ctx.fillText(type === 2 ? Math.round(v) + '주' : fmtKRW(v), pad.left - 6, y + 3);
+  }
+
+  // X축 라벨
+  ctx.textAlign = 'center';
+  for (let i = 0; i < yearly.length; i++) {
+    const x = pad.left + (cW * i / (yearly.length - 1));
+    ctx.fillText(yearly[i].year + '년', x, H - pad.bottom + 18);
+  }
+
+  // 영역 + 라인
+  const points = data.map((v, i) => ({
+    x: pad.left + (cW * i / (data.length - 1)),
+    y: pad.top + cH - (cH * (v - minV) / (maxV - minV))
+  }));
+
+  // 영역
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, pad.top + cH);
+  points.forEach(p => ctx.lineTo(p.x, p.y));
+  ctx.lineTo(points[points.length - 1].x, pad.top + cH);
+  ctx.closePath();
+  const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + cH);
+  grad.addColorStop(0, color + '40');
+  grad.addColorStop(1, color + '05');
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // 라인
+  ctx.beginPath();
+  points.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.5;
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+
+  // 도트 + 값
+  ctx.fillStyle = color;
+  ctx.font = 'bold 9px sans-serif';
+  ctx.textAlign = 'center';
+  points.forEach((p, i) => {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+    ctx.fill();
+    // 첫해, 마지막, 중간만 라벨 표시
+    if (i === 0 || i === points.length - 1 || i === Math.floor(points.length / 2)) {
+      ctx.fillStyle = '#fff';
+      ctx.fillText(type === 2 ? data[i] + '주' : fmtKRW(data[i]), p.x, p.y - 10);
+      ctx.fillStyle = color;
+    }
+  });
+
+  // 라벨
+  ctx.fillStyle = color;
+  ctx.font = 'bold 12px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText(label, pad.left, pad.top - 10);
+}
+
+// ─── 포맷 유틸 ───
+function fmtKRW(v) {
+  if (v >= 100000000) return (v / 100000000).toFixed(2) + '억원';
+  if (v >= 10000) return Math.round(v / 10000).toLocaleString() + '만원';
+  return Math.round(v).toLocaleString() + '원';
+}
+</script>
+</body>
+</html>
