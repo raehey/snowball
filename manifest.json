@@ -1,8 +1,8 @@
 {
-  "name": "DRIP 시뮬레이터 — 배당주 복리 재투자",
-  "short_name": "DRIP 시뮬",
-  "description": "배당주 복리 재투자 시뮬레이션",
-  "start_url": "./index.html",
+  "name": "눈덩이 — 배당주 복리 재투자 시뮬레이터",
+  "short_name": "눈덩이",
+  "description": "내 배당금은 얼마일까?! 귀차니즘을 위한 배당주 복리 재투자 시뮬레이션",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#0D0D0D",
   "theme_color": "#0D0D0D",

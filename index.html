@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="DRIP 시뮬레이터">
+<meta name="apple-mobile-web-app-title" content="눈덩이">
 <meta name="theme-color" content="#0D0D0D">
 <link rel="manifest" href="manifest.json">
-<title>DRIP 시뮬레이터 — 배당주 복리 재투자</title>
+<title>내 배당금은 얼마일까?!</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -178,8 +178,8 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
 <body>
 
 <div class="container">
-  <h1>💰 DRIP 시뮬레이터</h1>
-  <p class="subtitle">배당주 복리 재투자 시뮬레이션</p>
+  <h1>💰 내 배당금은 얼마일까?!</h1>
+  <p class="subtitle">귀차니즘을 위한 배당주 복리 재투자 시뮬레이션<br><span style="font-size:11px;color:var(--text3)">만든이 : 래해이</span></p>
 
   <!-- 투자금액 입력 -->
   <div class="section">
@@ -291,8 +291,12 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
       <div class="custom-total">
         <span>비중 합계</span>
         <span class="custom-total-val" id="customTotal">100%</span>
+        <div class="custom-reset" onclick="distributeEqual()" style="margin-left:auto;margin-right:8px">균등 배분</div>
       </div>
-      <div class="custom-add" id="customAddBtns"></div>
+      <div style="font-size:12px;color:var(--text3);padding:8px 0 4px">📌 월배당</div>
+      <div class="custom-add" id="customAddMonthly"></div>
+      <div style="font-size:12px;color:var(--text3);padding:8px 0 4px">📌 분기배당</div>
+      <div class="custom-add" id="customAddQuarterly"></div>
       <div class="cs-search-wrap">
         <input type="text" class="cs-search" id="stockSearch" placeholder="티커 검색 (예: AAPL, MSFT...)" oninput="searchStock()">
         <button class="cs-search-btn" onclick="searchStock()">검색</button>
@@ -319,11 +323,13 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
   </div>
 
   <!-- 하단 -->
-  <div class="footer-info">
-    환율: 1 USD = 1,370원 (고정)<br>
-    배당소득세: 15.4% 적용<br>
-    주가·배당률 고정 가정 (MVP)<br><br>
+  <div class="footer-info" id="footerInfo">
+    환율: 1 USD = 1,370원<br>
+    배당소득세: 15.4% 적용<br><br>
     ⚠️ 본 시뮬레이션은 참고용이며<br>투자 수익을 보장하지 않습니다.
+  </div>
+  <div style="text-align:center;padding-bottom:20px">
+    <span id="dataStatus" style="font-size:11px;color:var(--text3)">시세 불러오는 중...</span>
   </div>
 </div>
 
@@ -332,22 +338,112 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
 // 데이터 & 엔진 (TypeScript → JS 변환)
 // ═══════════════════════════════════════════
 const TAX_RATE = 0.154;
-const EXCHANGE_RATE = 1370;
+var EXCHANGE_RATE = 1370;
+var lastDataUpdate = '';
 
-var STOCKS = {
-  SCHD: { ticker:'SCHD', price:28*EXCHANGE_RATE, dividendYield:0.035, frequency:'quarterly', nameKo:'슈드', desc:'배당 성장 + 가치주' },
-  JEPQ: { ticker:'JEPQ', price:57*EXCHANGE_RATE, dividendYield:0.095, frequency:'monthly', nameKo:'제이펙큐', desc:'나스닥 커버드콜' },
-  JEPI: { ticker:'JEPI', price:56*EXCHANGE_RATE, dividendYield:0.072, frequency:'monthly', nameKo:'제피', desc:'S&P500 커버드콜' },
-  VYM:  { ticker:'VYM',  price:128*EXCHANGE_RATE, dividendYield:0.028, frequency:'quarterly', nameKo:'뱅가드 고배당', desc:'대형주 400종 분산' },
-  DGRO: { ticker:'DGRO', price:61*EXCHANGE_RATE, dividendYield:0.024, frequency:'quarterly', nameKo:'디그로', desc:'배당 성장률 상위' },
-  VIG:  { ticker:'VIG',  price:192*EXCHANGE_RATE, dividendYield:0.018, frequency:'quarterly', nameKo:'뱅가드 배당성장', desc:'10년+ 연속 증가' },
-  QYLD: { ticker:'QYLD', price:17*EXCHANGE_RATE, dividendYield:0.12, frequency:'monthly', nameKo:'큐일드', desc:'나스닥100 초고배당' },
-  XYLD: { ticker:'XYLD', price:40*EXCHANGE_RATE, dividendYield:0.10, frequency:'monthly', nameKo:'엑스일드', desc:'S&P500 초고배당' },
-  DIVO: { ticker:'DIVO', price:36*EXCHANGE_RATE, dividendYield:0.048, frequency:'monthly', nameKo:'디보', desc:'우량배당+커버드콜' },
-  HDV:  { ticker:'HDV',  price:112*EXCHANGE_RATE, dividendYield:0.034, frequency:'quarterly', nameKo:'에이치디브이', desc:'고배당 방어주' },
-  SPYD: { ticker:'SPYD', price:42*EXCHANGE_RATE, dividendYield:0.043, frequency:'quarterly', nameKo:'스파이디', desc:'S&P500 고배당 80종' },
-  DVY:  { ticker:'DVY',  price:130*EXCHANGE_RATE, dividendYield:0.033, frequency:'quarterly', nameKo:'디브이와이', desc:'다우존스 고배당' }
+// 기본 주가 (달러 기준, API 실패 시 폴백)
+var STOCK_USD = {
+  SCHD:{usd:28,yield:0.035}, JEPQ:{usd:57,yield:0.095}, JEPI:{usd:56,yield:0.072},
+  VYM:{usd:128,yield:0.028}, DGRO:{usd:61,yield:0.024}, VIG:{usd:192,yield:0.018},
+  QYLD:{usd:17,yield:0.12}, XYLD:{usd:40,yield:0.10}, DIVO:{usd:36,yield:0.048},
+  HDV:{usd:112,yield:0.034}, SPYD:{usd:42,yield:0.043}, DVY:{usd:130,yield:0.033}
 };
+
+var STOCKS = {};
+var STOCK_META = {
+  SCHD:{nameKo:'슈드',desc:'배당 성장 + 가치주',frequency:'quarterly'},
+  JEPQ:{nameKo:'제이펙큐',desc:'나스닥 커버드콜',frequency:'monthly'},
+  JEPI:{nameKo:'제피',desc:'S&P500 커버드콜',frequency:'monthly'},
+  VYM:{nameKo:'뱅가드 고배당',desc:'대형주 400종 분산',frequency:'quarterly'},
+  DGRO:{nameKo:'디그로',desc:'배당 성장률 상위',frequency:'quarterly'},
+  VIG:{nameKo:'뱅가드 배당성장',desc:'10년+ 연속 증가',frequency:'quarterly'},
+  QYLD:{nameKo:'큐일드',desc:'나스닥100 초고배당',frequency:'monthly'},
+  XYLD:{nameKo:'엑스일드',desc:'S&P500 초고배당',frequency:'monthly'},
+  DIVO:{nameKo:'디보',desc:'우량배당+커버드콜',frequency:'monthly'},
+  HDV:{nameKo:'에이치디브이',desc:'고배당 방어주',frequency:'quarterly'},
+  SPYD:{nameKo:'스파이디',desc:'S&P500 고배당 80종',frequency:'quarterly'},
+  DVY:{nameKo:'디브이와이',desc:'다우존스 고배당',frequency:'quarterly'}
+};
+
+// STOCKS 빌드 (환율 × 달러가)
+function buildStocks() {
+  for (const [t, d] of Object.entries(STOCK_USD)) {
+    const meta = STOCK_META[t] || {nameKo:t, desc:'', frequency:'quarterly'};
+    STOCKS[t] = { ticker:t, price:d.usd*EXCHANGE_RATE, dividendYield:d.yield, frequency:meta.frequency, nameKo:meta.nameKo, desc:meta.desc };
+  }
+}
+buildStocks();
+
+// ─── 실시간 환율 가져오기 (Google Finance 경유) ───
+async function fetchExchangeRate() {
+  try {
+    const res = await fetch('https://open.er-api.com/v6/latest/USD');
+    const data = await res.json();
+    if (data && data.rates && data.rates.KRW) {
+      EXCHANGE_RATE = Math.round(data.rates.KRW * 100) / 100;
+      buildStocks();
+      return true;
+    }
+  } catch(e) { console.log('환율 API 실패, 기본값 사용'); }
+  return false;
+}
+
+// ─── 실시간 주가 가져오기 (Yahoo Finance 경유) ───
+async function fetchStockPrice(ticker) {
+  try {
+    const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=1d&interval=1d`);
+    const data = await res.json();
+    const price = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
+    if (price && price > 0) return price;
+  } catch(e) {}
+  return null;
+}
+
+async function fetchAllPrices() {
+  const tickers = Object.keys(STOCK_USD);
+  const promises = tickers.map(t => fetchStockPrice(t));
+  const results = await Promise.allSettled(promises);
+  let updated = 0;
+  results.forEach((r, i) => {
+    if (r.status === 'fulfilled' && r.value) {
+      STOCK_USD[tickers[i]].usd = r.value;
+      updated++;
+    }
+  });
+  buildStocks();
+  return updated;
+}
+
+// ─── 앱 시작 시 데이터 로드 ───
+async function refreshMarketData() {
+  const statusEl = document.getElementById('dataStatus');
+  if (statusEl) statusEl.textContent = '시세 불러오는 중...';
+
+  const rateOk = await fetchExchangeRate();
+  const priceCount = await fetchAllPrices();
+
+  const now = new Date();
+  lastDataUpdate = now.getFullYear() + '.' + String(now.getMonth()+1).padStart(2,'0') + '.' + String(now.getDate()).padStart(2,'0') + ' ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+
+  if (statusEl) {
+    if (rateOk || priceCount > 0) {
+      statusEl.textContent = `시세 반영 완료 (${lastDataUpdate})`;
+      statusEl.style.color = 'var(--green)';
+    } else {
+      statusEl.textContent = '시세 불러오기 실패 (기본값 사용)';
+      statusEl.style.color = 'var(--red)';
+    }
+  }
+  updateFooter();
+}
+
+function updateFooter() {
+  const el = document.getElementById('footerInfo');
+  if (el) el.innerHTML = `환율: 1 USD = ${EXCHANGE_RATE.toLocaleString()}원 (${lastDataUpdate || '기본값'})<br>배당소득세: 15.4% 적용<br><br>⚠️ 본 시뮬레이션은 참고용이며<br>투자 수익을 보장하지 않습니다.`;
+}
+
+// 페이지 로드 시 자동 실행
+refreshMarketData();
 
 var PRESETS = {
   conservative: [{ticker:'SCHD',weight:.60},{ticker:'DGRO',weight:.20},{ticker:'VYM',weight:.20}],
@@ -637,6 +733,8 @@ function runSimulation() {
 
   // 결과 표시
   document.getElementById('results').classList.remove('hidden');
+  // 차트는 DOM이 보인 후 그려야 canvas 사이즈가 잡힘
+  setTimeout(() => { drawChart(currentChart); }, 50);
   document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -780,14 +878,18 @@ function buildCustomUI() {
   }
   document.getElementById('customStocks').innerHTML = html;
 
-  // 추가 버튼 (아직 안 들어간 종목들)
+  // 추가 버튼 (월배당/분기배당 분류)
   const used = new Set(customAllocs.map(a => a.ticker));
-  let addHTML = '';
+  let monthlyHTML = '', quarterlyHTML = '';
   for (const t of Object.keys(STOCKS)) {
+    const s = STOCKS[t];
     const added = used.has(t);
-    addHTML += `<div class="custom-add-btn ${added?'added':''}" onclick="${added?'':'addStock(\''+t+'\')'}">${added?'✓ ':'+ '}${t}</div>`;
+    const btn = `<div class="custom-add-btn ${added?'added':''}" onclick="${added?'':'addStock(\''+t+'\')'}">${added?'✓ ':'+ '}${t}</div>`;
+    if (s.frequency === 'monthly') monthlyHTML += btn;
+    else quarterlyHTML += btn;
   }
-  document.getElementById('customAddBtns').innerHTML = addHTML;
+  document.getElementById('customAddMonthly').innerHTML = monthlyHTML || '<span style="font-size:11px;color:var(--text3)">없음</span>';
+  document.getElementById('customAddQuarterly').innerHTML = quarterlyHTML || '<span style="font-size:11px;color:var(--text3)">없음</span>';
 
   updateTotalDisplay();
 }
@@ -820,6 +922,24 @@ function resetCustom() {
   buildCustomUI();
 }
 
+function distributeEqual() {
+  const n = customAllocs.length;
+  if (n === 0) return;
+  const base = Math.floor(10000 / n); // 소수 2자리 정밀도
+  const rem = 10000 - base * n;
+  customAllocs.forEach((a, i) => {
+    a.weight = (base + (i < rem ? 1 : 0)) / 10000;
+  });
+  // 깔끔한 정수%로 반올림 (합계 100% 보장)
+  const intBase = Math.floor(100 / n);
+  const intRem = 100 - intBase * n;
+  customAllocs.forEach((a, i) => {
+    a.weight = (intBase + (i < intRem ? 1 : 0)) / 100;
+  });
+  useCustom = true;
+  buildCustomUI();
+}
+
 function updateTotalDisplay() {
   const total = Math.round(customAllocs.reduce((s, a) => s + a.weight, 0) * 100);
   const el = document.getElementById('customTotal');
@@ -842,59 +962,77 @@ function resimulate() {
 }
 
 // ═══════════════════════════════════════════
-// 종목 검색 (내장 + 수동 추가)
+// 종목 검색 (내장 + Yahoo Finance 실시간)
 // ═══════════════════════════════════════════
+let searchTimeout = null;
+
 function searchStock() {
   const q = document.getElementById('stockSearch').value.trim().toUpperCase();
   const el = document.getElementById('searchResults');
   if (!q) { el.innerHTML = ''; return; }
 
-  // 내장 종목 검색
+  // 내장 종목 먼저 검색
   const matches = Object.values(STOCKS).filter(s =>
     s.ticker.includes(q) || s.nameKo.includes(q) || s.desc.includes(q)
   );
-
   const used = new Set(customAllocs.map(a => a.ticker));
   let html = '';
 
-  if (matches.length > 0) {
-    for (const s of matches) {
-      if (used.has(s.ticker)) continue;
-      html += `<div class="cs-search-result" onclick="addStock('${s.ticker}');document.getElementById('stockSearch').value='';document.getElementById('searchResults').innerHTML='';">
-        <div><strong>${s.ticker}</strong> ${s.nameKo} · ${(s.dividendYield*100).toFixed(1)}%</div>
-        <div class="sr-info">$${(s.price/EXCHANGE_RATE).toFixed(0)} · ${s.frequency==='monthly'?'월배당':'분기배당'}</div>
-      </div>`;
-    }
+  for (const s of matches) {
+    if (used.has(s.ticker)) continue;
+    html += `<div class="cs-search-result" onclick="addStock('${s.ticker}');clearSearch()">
+      <div><strong>${s.ticker}</strong> ${s.nameKo} · ${(s.dividendYield*100).toFixed(1)}%</div>
+      <div class="sr-info">$${(s.price/EXCHANGE_RATE).toFixed(2)} · ${s.frequency==='monthly'?'월배당':'분기배당'}</div>
+    </div>`;
   }
 
-  // 내장에 없으면 직접 추가 안내
-  if (matches.length === 0 && q.length >= 1) {
-    html += `<div class="cs-search-result" onclick="addManualStock('${q}')">
-      <div><strong>${q}</strong> 직접 추가하기</div>
-      <div class="sr-info">주가·배당률 직접 입력</div>
+  // 내장에 없는 티커는 Yahoo Finance에서 실시간 주가 검색
+  if (!STOCKS[q] && q.length >= 1) {
+    html += `<div class="cs-search-result" id="yahooResult" style="opacity:.6">
+      <div><strong>${q}</strong> 주가 검색 중...</div>
+      <div class="sr-info">Yahoo Finance에서 조회</div>
     </div>`;
+
+    // 타이핑 멈추고 0.5초 후 검색 (API 부하 방지)
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => fetchAndShowStock(q), 500);
   }
 
   el.innerHTML = html || '<div style="padding:8px;color:var(--text3);font-size:12px">검색 결과 없음</div>';
 }
 
-function addManualStock(ticker) {
-  const priceUSD = prompt(ticker + '의 현재 주가 (달러)를 입력하세요.\n예: 150');
-  if (!priceUSD || isNaN(priceUSD)) return;
-  const yieldPct = prompt(ticker + '의 배당률(%)을 입력하세요.\n예: 3.5');
-  if (!yieldPct || isNaN(yieldPct)) return;
-  const freq = prompt('배당 주기를 입력하세요.\n1 = 월배당, 2 = 분기배당');
+async function fetchAndShowStock(ticker) {
+  const el = document.getElementById('yahooResult');
+  if (!el) return;
+  try {
+    const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=5d&interval=1d`);
+    const data = await res.json();
+    const meta = data?.chart?.result?.[0]?.meta;
+    if (meta && meta.regularMarketPrice > 0) {
+      const price = meta.regularMarketPrice;
+      const name = meta.shortName || meta.symbol || ticker;
+      el.style.opacity = '1';
+      el.innerHTML = `<div><strong>${ticker}</strong> ${name}</div><div class="sr-info">$${price.toFixed(2)} (${fmtKRW(price*EXCHANGE_RATE)}) · 클릭하여 추가</div>`;
+      el.onclick = () => {
+        const yieldPct = prompt(ticker + '의 배당률(%)을 입력하세요.\\n모르면 0 입력 (나중에 수정 가능)');
+        const y = parseFloat(yieldPct) || 0;
+        const freq = prompt('배당 주기?\\n1 = 월배당, 2 = 분기배당, 3 = 연배당');
+        const freqMap = {'1':'monthly','3':'annually'};
+        STOCKS[ticker] = { ticker, price:price*EXCHANGE_RATE, dividendYield:y/100, frequency:freqMap[freq]||'quarterly', nameKo:name, desc:'Yahoo Finance' };
+        STOCK_USD[ticker] = {usd:price, yield:y/100};
+        STOCK_META[ticker] = {nameKo:name, desc:'Yahoo Finance', frequency:freqMap[freq]||'quarterly'};
+        addStock(ticker);
+        clearSearch();
+      };
+    } else {
+      el.innerHTML = `<div><strong>${ticker}</strong> 종목을 찾을 수 없습니다</div><div class="sr-info">티커를 확인해주세요</div>`;
+    }
+  } catch(e) {
+    el.innerHTML = `<div><strong>${ticker}</strong> 검색 실패</div><div class="sr-info">인터넷 연결을 확인해주세요</div>`;
+  }
+}
 
-  STOCKS[ticker] = {
-    ticker: ticker,
-    price: parseFloat(priceUSD) * EXCHANGE_RATE,
-    dividendYield: parseFloat(yieldPct) / 100,
-    frequency: freq === '1' ? 'monthly' : 'quarterly',
-    nameKo: ticker,
-    desc: '직접 추가한 종목'
-  };
-
-  addStock(ticker);
+function clearSearch() {
   document.getElementById('stockSearch').value = '';
   document.getElementById('searchResults').innerHTML = '';
 }
