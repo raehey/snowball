@@ -108,6 +108,48 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
 .period-btn{flex:1;padding:8px;background:var(--card2);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-size:13px;cursor:pointer;text-align:center;transition:all .2s}
 .period-btn.active{background:var(--gold-dim);border-color:var(--gold);color:var(--gold)}
 
+/* 통화 변환 */
+.currency-row{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.currency-toggle{font-size:12px;color:var(--text2);cursor:pointer;padding:6px 10px;background:var(--card2);border:1px solid var(--border);border-radius:8px;transition:all .2s}
+.currency-toggle:active{border-color:var(--gold);color:var(--gold)}
+.currency-converted{font-size:13px;color:var(--text3);font-family:'SF Mono',monospace}
+
+/* 기간 직접 입력 */
+.period-custom{position:relative;display:flex;align-items:center;justify-content:center;gap:0}
+.period-custom-input{width:28px;background:transparent;border:none;color:var(--text);font-size:13px;text-align:center;outline:none;padding:0}
+.period-custom-input::placeholder{color:var(--text3)}
+.period-custom-unit{font-size:13px;color:inherit}
+
+/* 기준일 표시 */
+.stock-date{font-size:10px;color:var(--text3);margin-top:4px}
+
+/* 커스텀 포트폴리오 편집 */
+.custom-section{background:var(--card);border-radius:16px;padding:20px;margin-bottom:16px;border:1px solid var(--border)}
+.custom-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.custom-header span{font-size:14px;color:var(--gold);font-weight:600}
+.custom-reset{font-size:11px;color:var(--text3);cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:6px}
+.custom-reset:active{border-color:var(--gold);color:var(--gold)}
+.custom-stock{display:flex;align-items:center;gap:8px;padding:10px 0;border-top:1px solid var(--border)}
+.custom-stock:first-of-type{border-top:none}
+.cs-ticker{font-size:14px;font-weight:700;color:var(--text);width:50px}
+.cs-name{font-size:11px;color:var(--text3);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cs-weight{width:56px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:6px 4px;color:var(--gold);font-size:14px;text-align:center;outline:none;font-weight:600;font-family:'SF Mono',monospace}
+.cs-weight:focus{border-color:var(--gold)}
+.cs-pct{font-size:12px;color:var(--text3);width:14px}
+.cs-remove{width:28px;height:28px;border-radius:50%;background:none;border:1px solid var(--border);color:var(--text3);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.cs-remove:active{border-color:var(--red);color:var(--red)}
+.custom-total{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid var(--border);font-size:13px}
+.custom-total-val{font-family:'SF Mono',monospace;font-weight:700}
+.custom-total-val.valid{color:var(--green)}
+.custom-total-val.invalid{color:var(--red)}
+.custom-add{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.custom-add-btn{padding:6px 10px;background:var(--card2);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-size:11px;cursor:pointer;transition:all .2s}
+.custom-add-btn:active{border-color:var(--gold);color:var(--gold)}
+.custom-add-btn.added{opacity:.3;pointer-events:none}
+.custom-resim{width:100%;padding:12px;background:var(--gold);border:none;border-radius:12px;font-size:15px;font-weight:700;color:#000;cursor:pointer;margin-top:12px;transition:opacity .2s}
+.custom-resim:active{opacity:.8}
+.custom-resim:disabled{opacity:.4;cursor:not-allowed}
+
 .hidden{display:none}
 </style>
 </head>
@@ -122,6 +164,12 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
     <div class="section-title">투자 금액</div>
     <div class="amount-input-wrap">
       <input type="text" id="amountInput" class="amount-input" value="50,000,000" inputmode="numeric">
+    </div>
+    <div class="currency-row">
+      <div class="currency-toggle" id="currencyToggle" onclick="toggleCurrency()">
+        <span id="currencyLabel">₩ 원화</span> ⇄ <span id="currencyAlt">$ 달러</span>
+      </div>
+      <div class="currency-converted" id="currencyConverted">≈ $36,496</div>
     </div>
     <div class="quick-amounts">
       <div class="quick-btn" onclick="setAmount(10000000)">1천만</div>
@@ -162,6 +210,7 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
       <div class="period-btn active" onclick="setPeriod(10)" id="period-10">10년</div>
       <div class="period-btn" onclick="setPeriod(15)">15년</div>
       <div class="period-btn" onclick="setPeriod(20)">20년</div>
+      <div class="period-btn period-custom" onclick="focusCustomPeriod()"><input type="text" id="customPeriod" class="period-custom-input" placeholder="직접" inputmode="numeric" maxlength="2" onchange="setCustomPeriod()"><span class="period-custom-unit">년</span></div>
     </div>
   </div>
 
@@ -188,6 +237,10 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
         <label>배당 재투자 (DRIP)</label>
         <label class="switch"><input type="checkbox" id="dripToggle" checked><span class="slider"></span></label>
       </div>
+      <div class="adv-row">
+        <label>세후 배당금 적용 (15.4%)</label>
+        <label class="switch"><input type="checkbox" id="taxToggle" checked><span class="slider"></span></label>
+      </div>
     </div>
   </div>
 
@@ -201,6 +254,21 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
 
     <!-- 종목 상세 -->
     <div id="stockCards"></div>
+
+    <!-- 커스텀 포트폴리오 편집 -->
+    <div class="custom-section" id="customSection">
+      <div class="custom-header">
+        <span>✏️ 직접 수정하기</span>
+        <div class="custom-reset" onclick="resetCustom()">프리셋으로 초기화</div>
+      </div>
+      <div id="customStocks"></div>
+      <div class="custom-total">
+        <span>비중 합계</span>
+        <span class="custom-total-val" id="customTotal">100%</span>
+      </div>
+      <div class="custom-add" id="customAddBtns"></div>
+      <button class="custom-resim" id="customResimBtn" onclick="resimulate()">이 비중으로 다시 계산 🔄</button>
+    </div>
 
     <!-- 차트 -->
     <div class="section">
@@ -250,7 +318,7 @@ const STOCKS = {
   DVY:  { ticker:'DVY',  price:130*EXCHANGE_RATE, dividendYield:0.033, frequency:'quarterly', nameKo:'디브이와이', desc:'다우존스 고배당' }
 };
 
-const PRESETS = {
+var PRESETS = {
   conservative: [{ticker:'SCHD',weight:.60},{ticker:'DGRO',weight:.20},{ticker:'VYM',weight:.20}],
   balanced:     [{ticker:'JEPQ',weight:.40},{ticker:'SCHD',weight:.40},{ticker:'VIG',weight:.20}],
   aggressive:   [{ticker:'JEPQ',weight:.50},{ticker:'JEPI',weight:.30},{ticker:'SCHD',weight:.20}]
@@ -318,7 +386,7 @@ function simulate(capital, style, years, opts) {
         gross = s.stock.frequency === 'monthly' ? annual / 12 :
                 s.stock.frequency === 'quarterly' ? annual / 4 : annual;
       }
-      const net = gross * (1 - TAX_RATE);
+      const net = opts.applyTax !== false ? gross * (1 - TAX_RATE) : gross;
       mGross += gross; mNet += net;
 
       // 재투자
@@ -356,18 +424,52 @@ let currentStyle = 'balanced';
 let currentPeriod = 10;
 let currentChart = 0;
 let simResult = null;
+let isUSD = false; // 통화 모드: false=원화, true=달러
 
 // ─── 금액 입력 ───
 const amountEl = document.getElementById('amountInput');
 amountEl.addEventListener('input', function() {
   let v = this.value.replace(/[^0-9]/g, '');
   if (v) this.value = Number(v).toLocaleString();
+  updateConvertedCurrency();
 });
 function setAmount(v) {
-  amountEl.value = v.toLocaleString();
+  if (isUSD) {
+    // 달러 모드에서 빠른 버튼은 원화 기준이므로 달러로 변환
+    amountEl.value = Math.round(v / EXCHANGE_RATE).toLocaleString();
+  } else {
+    amountEl.value = v.toLocaleString();
+  }
+  updateConvertedCurrency();
 }
 function getAmount() {
-  return Number(amountEl.value.replace(/[^0-9]/g, '')) || 0;
+  const raw = Number(amountEl.value.replace(/[^0-9]/g, '')) || 0;
+  return isUSD ? raw * EXCHANGE_RATE : raw;
+}
+
+// ─── 통화 변환 ───
+function toggleCurrency() {
+  const raw = Number(amountEl.value.replace(/[^0-9]/g, '')) || 0;
+  isUSD = !isUSD;
+  if (isUSD) {
+    amountEl.value = Math.round(raw / EXCHANGE_RATE).toLocaleString();
+    document.getElementById('currencyLabel').textContent = '$ 달러';
+    document.getElementById('currencyAlt').textContent = '₩ 원화';
+  } else {
+    amountEl.value = Math.round(raw * EXCHANGE_RATE).toLocaleString();
+    document.getElementById('currencyLabel').textContent = '₩ 원화';
+    document.getElementById('currencyAlt').textContent = '$ 달러';
+  }
+  updateConvertedCurrency();
+}
+function updateConvertedCurrency() {
+  const raw = Number(amountEl.value.replace(/[^0-9]/g, '')) || 0;
+  const el = document.getElementById('currencyConverted');
+  if (isUSD) {
+    el.textContent = '≈ ' + fmtKRW(raw * EXCHANGE_RATE);
+  } else {
+    el.textContent = '≈ $' + Math.round(raw / EXCHANGE_RATE).toLocaleString();
+  }
 }
 
 // ─── 성향 선택 ───
@@ -381,7 +483,17 @@ function selectStyle(s) {
 function setPeriod(y) {
   currentPeriod = y;
   document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
+  event.target.closest('.period-btn').classList.add('active');
+  document.getElementById('customPeriod').value = '';
+}
+function focusCustomPeriod() {
+  document.getElementById('customPeriod').focus();
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  event.target.closest('.period-btn').classList.add('active');
+}
+function setCustomPeriod() {
+  const v = parseInt(document.getElementById('customPeriod').value);
+  if (v >= 1 && v <= 50) currentPeriod = v;
 }
 
 // ─── 고급 옵션 ───
@@ -399,11 +511,13 @@ function runSimulation() {
   const capital = getAmount();
   if (capital < 100000) { alert('최소 10만원 이상 입력해주세요.'); return; }
 
+  const applyTax = document.getElementById('taxToggle').checked;
   const opts = {
     divGrowth: parseFloat(document.getElementById('divGrowth').value) / 100 || 0,
     priceGrowth: parseFloat(document.getElementById('priceGrowth').value) / 100 || 0,
     annualContrib: (parseFloat(document.getElementById('annualContrib').value) || 0) * 10000,
-    enableDRIP: document.getElementById('dripToggle').checked
+    enableDRIP: document.getElementById('dripToggle').checked,
+    applyTax: applyTax
   };
 
   simResult = simulate(capital, currentStyle, currentPeriod, opts);
@@ -444,7 +558,8 @@ function runSimulation() {
     const stock = STOCKS[s.ticker];
     const finalSnap = final.snaps.find(sn => sn.ticker === s.ticker);
     const usdPrice = (stock.price / EXCHANGE_RATE).toFixed(2);
-    const monthlyNet = (s.shares * s.currentPrice * s.currentYield / 12 * (1 - TAX_RATE));
+    const monthlyNet = applyTax ? (s.shares * s.currentPrice * s.currentYield / 12 * (1 - TAX_RATE)) : (s.shares * s.currentPrice * s.currentYield / 12);
+    const taxLabel = applyTax ? '세후' : '세전';
     stockHTML += `
       <div class="stock-card">
         <div class="stock-header">
@@ -453,12 +568,13 @@ function runSimulation() {
         </div>
         <div class="stock-info">
           <div>${stock.nameKo}</div><div style="text-align:right">$${usdPrice} <span style="color:var(--text3)">(${fmtKRW(stock.price)})</span></div>
-          <div>비중 ${(s.weight*100).toFixed(0)}%</div><div style="text-align:right">월 세후 ${fmtKRW(monthlyNet)}</div>
+          <div>비중 ${(s.weight*100).toFixed(0)}%</div><div style="text-align:right">월 ${taxLabel} ${fmtKRW(monthlyNet)}</div>
         </div>
         <div class="stock-shares">
           <span>${s.initShares}주 → ${finalSnap.shares}주</span>
           <span class="arrow">+${finalSnap.shares - s.initShares}주 📈</span>
         </div>
+        <div class="stock-date">주가 기준: 2025.05 | 환율: 1 USD = ${EXCHANGE_RATE.toLocaleString()}원</div>
       </div>`;
   }
   document.getElementById('stockCards').innerHTML = stockHTML;
@@ -478,6 +594,10 @@ function runSimulation() {
 
   // 차트 그리기
   drawChart(currentChart);
+
+  // 커스텀 편집 UI 빌드
+  if (!useCustom) customAllocs = PRESETS[currentStyle].map(p => ({...p}));
+  buildCustomUI();
 
   // 결과 표시
   document.getElementById('results').classList.remove('hidden');
@@ -595,6 +715,94 @@ function drawChart(type) {
   ctx.font = 'bold 12px sans-serif';
   ctx.textAlign = 'left';
   ctx.fillText(label, pad.left, pad.top - 10);
+}
+
+// ═══════════════════════════════════════════
+// 커스텀 포트폴리오 편집
+// ═══════════════════════════════════════════
+let customAllocs = []; // [{ticker, weight}, ...]
+let useCustom = false;
+
+function buildCustomUI() {
+  // 현재 프리셋에서 초기값 복사
+  if (customAllocs.length === 0) {
+    customAllocs = PRESETS[currentStyle].map(p => ({...p}));
+  }
+
+  // 종목 행 렌더링
+  let html = '';
+  for (let i = 0; i < customAllocs.length; i++) {
+    const a = customAllocs[i];
+    const stock = STOCKS[a.ticker];
+    html += `<div class="custom-stock">
+      <span class="cs-ticker">${a.ticker}</span>
+      <span class="cs-name">${stock.nameKo} · ${(stock.dividendYield*100).toFixed(1)}%</span>
+      <input type="text" class="cs-weight" value="${Math.round(a.weight*100)}" inputmode="numeric" maxlength="3" onchange="updateWeight(${i}, this.value)" onfocus="this.select()">
+      <span class="cs-pct">%</span>
+      <button class="cs-remove" onclick="removeStock(${i})">×</button>
+    </div>`;
+  }
+  document.getElementById('customStocks').innerHTML = html;
+
+  // 추가 버튼 (아직 안 들어간 종목들)
+  const used = new Set(customAllocs.map(a => a.ticker));
+  let addHTML = '';
+  for (const t of Object.keys(STOCKS)) {
+    const added = used.has(t);
+    addHTML += `<div class="custom-add-btn ${added?'added':''}" onclick="${added?'':'addStock(\''+t+'\')'}">${added?'✓ ':'+ '}${t}</div>`;
+  }
+  document.getElementById('customAddBtns').innerHTML = addHTML;
+
+  updateTotalDisplay();
+}
+
+function updateWeight(idx, val) {
+  const n = parseInt(val) || 0;
+  customAllocs[idx].weight = n / 100;
+  useCustom = true;
+  updateTotalDisplay();
+}
+
+function removeStock(idx) {
+  customAllocs.splice(idx, 1);
+  useCustom = true;
+  buildCustomUI();
+}
+
+function addStock(ticker) {
+  // 남은 비중 자동 계산
+  const usedWeight = customAllocs.reduce((s, a) => s + a.weight, 0);
+  const remaining = Math.max(0, Math.round((1 - usedWeight) * 100)) / 100;
+  customAllocs.push({ ticker, weight: remaining > 0 ? remaining : 0.1 });
+  useCustom = true;
+  buildCustomUI();
+}
+
+function resetCustom() {
+  customAllocs = PRESETS[currentStyle].map(p => ({...p}));
+  useCustom = false;
+  buildCustomUI();
+}
+
+function updateTotalDisplay() {
+  const total = Math.round(customAllocs.reduce((s, a) => s + a.weight, 0) * 100);
+  const el = document.getElementById('customTotal');
+  el.textContent = total + '%';
+  el.className = 'custom-total-val ' + (total === 100 ? 'valid' : 'invalid');
+  document.getElementById('customResimBtn').disabled = total !== 100 || customAllocs.length === 0;
+}
+
+function resimulate() {
+  const total = Math.round(customAllocs.reduce((s, a) => s + a.weight, 0) * 100);
+  if (total !== 100) { alert('비중 합계가 100%여야 합니다.'); return; }
+
+  // 커스텀 프리셋으로 시뮬레이션 재실행
+  PRESETS._custom = customAllocs.map(a => ({ticker: a.ticker, weight: a.weight}));
+  const origStyle = currentStyle;
+  currentStyle = '_custom';
+  runSimulation();
+  currentStyle = origStyle;
+  useCustom = true;
 }
 
 // ─── 포맷 유틸 ───
