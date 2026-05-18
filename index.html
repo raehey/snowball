@@ -338,15 +338,15 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
 // 데이터 & 엔진 (TypeScript → JS 변환)
 // ═══════════════════════════════════════════
 const TAX_RATE = 0.154;
-var EXCHANGE_RATE = 1370;
-var lastDataUpdate = '';
+var EXCHANGE_RATE = 1498; // 2026.05.18 기준
+var lastDataUpdate = '2026.05.18';
 
-// 기본 주가 (달러 기준, API 실패 시 폴백)
+// 주가 (달러 기준, 2026.05.18 종가 기준)
 var STOCK_USD = {
-  SCHD:{usd:28,yield:0.035}, JEPQ:{usd:57,yield:0.095}, JEPI:{usd:56,yield:0.072},
-  VYM:{usd:128,yield:0.028}, DGRO:{usd:61,yield:0.024}, VIG:{usd:192,yield:0.018},
-  QYLD:{usd:17,yield:0.12}, XYLD:{usd:40,yield:0.10}, DIVO:{usd:36,yield:0.048},
-  HDV:{usd:112,yield:0.034}, SPYD:{usd:42,yield:0.043}, DVY:{usd:130,yield:0.033}
+  SCHD:{usd:31.63,yield:0.035}, JEPQ:{usd:59.77,yield:0.095}, JEPI:{usd:55.89,yield:0.072},
+  VYM:{usd:155.76,yield:0.028}, DGRO:{usd:73.24,yield:0.024}, VIG:{usd:228.04,yield:0.018},
+  QYLD:{usd:17.90,yield:0.12}, XYLD:{usd:40.52,yield:0.10}, DIVO:{usd:45.37,yield:0.048},
+  HDV:{usd:105.04,yield:0.034}, SPYD:{usd:46.62,yield:0.043}, DVY:{usd:150.96,yield:0.033}
 };
 
 var STOCKS = {};
@@ -374,75 +374,83 @@ function buildStocks() {
 }
 buildStocks();
 
-// ─── 실시간 환율 가져오기 (Google Finance 경유) ───
+// ─── CORS 프록시 경유 API ───
+const PROXY = 'https://api.allorigins.win/raw?url=';
+
+async function fetchJSON(url) {
+  const res = await fetch(PROXY + encodeURIComponent(url));
+  return await res.json();
+}
+
+// 환율 가져오기
 async function fetchExchangeRate() {
   try {
+    // 프록시 없이 직접 (이 API는 CORS 허용)
     const res = await fetch('https://open.er-api.com/v6/latest/USD');
     const data = await res.json();
-    if (data && data.rates && data.rates.KRW) {
+    if (data?.rates?.KRW) {
       EXCHANGE_RATE = Math.round(data.rates.KRW * 100) / 100;
-      buildStocks();
       return true;
     }
-  } catch(e) { console.log('환율 API 실패, 기본값 사용'); }
+  } catch(e) {}
   return false;
 }
 
-// ─── 실시간 주가 가져오기 (Yahoo Finance 경유) ───
+// Yahoo Finance에서 주가 가져오기 (CORS 프록시 경유)
 async function fetchStockPrice(ticker) {
   try {
-    const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=1d&interval=1d`);
-    const data = await res.json();
+    const data = await fetchJSON(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=1d&interval=1d`);
     const price = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
-    if (price && price > 0) return price;
+    if (price > 0) return price;
   } catch(e) {}
   return null;
 }
 
+// 모든 내장 종목 주가 업데이트
 async function fetchAllPrices() {
   const tickers = Object.keys(STOCK_USD);
-  const promises = tickers.map(t => fetchStockPrice(t));
-  const results = await Promise.allSettled(promises);
   let updated = 0;
-  results.forEach((r, i) => {
-    if (r.status === 'fulfilled' && r.value) {
-      STOCK_USD[tickers[i]].usd = r.value;
-      updated++;
-    }
-  });
-  buildStocks();
+  // 3개씩 묶어서 호출 (프록시 부하 방지)
+  for (let i = 0; i < tickers.length; i += 3) {
+    const batch = tickers.slice(i, i + 3);
+    const results = await Promise.allSettled(batch.map(t => fetchStockPrice(t)));
+    results.forEach((r, j) => {
+      if (r.status === 'fulfilled' && r.value) {
+        STOCK_USD[batch[j]].usd = r.value;
+        updated++;
+      }
+    });
+  }
   return updated;
 }
 
-// ─── 앱 시작 시 데이터 로드 ───
+// 앱 시작 시 자동 실행
 async function refreshMarketData() {
   const statusEl = document.getElementById('dataStatus');
-  if (statusEl) statusEl.textContent = '시세 불러오는 중...';
+  if (statusEl) statusEl.textContent = '📡 시세 불러오는 중...';
 
   const rateOk = await fetchExchangeRate();
   const priceCount = await fetchAllPrices();
+  buildStocks(); // 새 주가로 STOCKS 재빌드
 
   const now = new Date();
   lastDataUpdate = now.getFullYear() + '.' + String(now.getMonth()+1).padStart(2,'0') + '.' + String(now.getDate()).padStart(2,'0') + ' ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
 
   if (statusEl) {
-    if (rateOk || priceCount > 0) {
-      statusEl.textContent = `시세 반영 완료 (${lastDataUpdate})`;
+    if (priceCount > 0) {
+      statusEl.textContent = `✅ 시세 반영 완료 (${lastDataUpdate}) | ${priceCount}종목 | 환율 ${EXCHANGE_RATE.toLocaleString()}원`;
       statusEl.style.color = 'var(--green)';
+    } else if (rateOk) {
+      statusEl.textContent = `⚠️ 환율만 반영 (주가는 기본값) | ${lastDataUpdate}`;
+      statusEl.style.color = '#FFC107';
     } else {
-      statusEl.textContent = '시세 불러오기 실패 (기본값 사용)';
+      statusEl.textContent = `❌ 시세 불러오기 실패 (기본값 사용)`;
       statusEl.style.color = 'var(--red)';
     }
   }
-  updateFooter();
+  const footer = document.getElementById('footerInfo');
+  if (footer) footer.innerHTML = `환율: 1 USD = ${EXCHANGE_RATE.toLocaleString()}원 (${lastDataUpdate})<br>배당소득세: 15.4% 적용<br><br>⚠️ 본 시뮬레이션은 참고용이며<br>투자 수익을 보장하지 않습니다.`;
 }
-
-function updateFooter() {
-  const el = document.getElementById('footerInfo');
-  if (el) el.innerHTML = `환율: 1 USD = ${EXCHANGE_RATE.toLocaleString()}원 (${lastDataUpdate || '기본값'})<br>배당소득세: 15.4% 적용<br><br>⚠️ 본 시뮬레이션은 참고용이며<br>투자 수익을 보장하지 않습니다.`;
-}
-
-// 페이지 로드 시 자동 실행
 refreshMarketData();
 
 var PRESETS = {
@@ -1005,8 +1013,7 @@ async function fetchAndShowStock(ticker) {
   const el = document.getElementById('yahooResult');
   if (!el) return;
   try {
-    const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=5d&interval=1d`);
-    const data = await res.json();
+    const data = await fetchJSON(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=5d&interval=1d`);
     const meta = data?.chart?.result?.[0]?.meta;
     if (meta && meta.regularMarketPrice > 0) {
       const price = meta.regularMarketPrice;
