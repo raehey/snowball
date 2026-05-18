@@ -1013,21 +1013,48 @@ async function fetchAndShowStock(ticker) {
   const el = document.getElementById('yahooResult');
   if (!el) return;
   try {
-    const data = await fetchJSON(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=5d&interval=1d`);
+    // 주가 + 배당 정보를 한번에 가져오기
+    const data = await fetchJSON(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=1y&interval=1mo&includePrePost=false`);
     const meta = data?.chart?.result?.[0]?.meta;
     if (meta && meta.regularMarketPrice > 0) {
       const price = meta.regularMarketPrice;
       const name = meta.shortName || meta.symbol || ticker;
+
+      // 배당 정보 가져오기 (quoteSummary API)
+      let divYield = 0, freq = 'quarterly';
+      try {
+        const sumData = await fetchJSON(`https://query1.finance.yahoo.com/v10/finance/quoteSummary/${ticker}?modules=summaryDetail,price`);
+        const detail = sumData?.quoteSummary?.result?.[0]?.summaryDetail;
+        const priceModule = sumData?.quoteSummary?.result?.[0]?.price;
+        // 배당률
+        if (detail?.dividendYield?.raw) divYield = detail.dividendYield.raw;
+        else if (detail?.trailingAnnualDividendYield?.raw) divYield = detail.trailingAnnualDividendYield.raw;
+        // 배당 주기 추정 (연간 배당 횟수로 판단)
+        // exDividendDate 간격이나 dividendRate로 추정
+        if (priceModule?.shortName) {}
+        // Yahoo의 dividendDate 간격으로 판단 어려우므로, 배당 히스토리로 추정
+        const events = data?.chart?.result?.[0]?.events?.dividends;
+        if (events) {
+          const divDates = Object.keys(events).map(Number).sort();
+          if (divDates.length >= 2) {
+            const gaps = [];
+            for (let i = 1; i < divDates.length; i++) gaps.push(divDates[i] - divDates[i-1]);
+            const avgGapDays = gaps.reduce((s,g)=>s+g,0) / gaps.length / 86400;
+            if (avgGapDays < 45) freq = 'monthly';        // ~30일 간격 → 월배당
+            else if (avgGapDays < 120) freq = 'quarterly'; // ~90일 간격 → 분기
+            else freq = 'annually';                        // ~365일 → 연배당
+          }
+        }
+      } catch(e2) {}
+
+      const freqLabel = freq==='monthly'?'월배당':freq==='quarterly'?'분기배당':'연배당';
+      const yieldPct = (divYield * 100).toFixed(2);
       el.style.opacity = '1';
-      el.innerHTML = `<div><strong>${ticker}</strong> ${name}</div><div class="sr-info">$${price.toFixed(2)} (${fmtKRW(price*EXCHANGE_RATE)}) · 클릭하여 추가</div>`;
+      el.innerHTML = `<div><strong>${ticker}</strong> ${name}</div><div class="sr-info">$${price.toFixed(2)} (${fmtKRW(price*EXCHANGE_RATE)}) · ${freqLabel} · 배당률 ${yieldPct}% · 클릭하여 추가</div>`;
       el.onclick = () => {
-        const yieldPct = prompt(ticker + '의 배당률(%)을 입력하세요.\\n모르면 0 입력 (나중에 수정 가능)');
-        const y = parseFloat(yieldPct) || 0;
-        const freq = prompt('배당 주기?\\n1 = 월배당, 2 = 분기배당, 3 = 연배당');
-        const freqMap = {'1':'monthly','3':'annually'};
-        STOCKS[ticker] = { ticker, price:price*EXCHANGE_RATE, dividendYield:y/100, frequency:freqMap[freq]||'quarterly', nameKo:name, desc:'Yahoo Finance' };
-        STOCK_USD[ticker] = {usd:price, yield:y/100};
-        STOCK_META[ticker] = {nameKo:name, desc:'Yahoo Finance', frequency:freqMap[freq]||'quarterly'};
+        STOCKS[ticker] = { ticker, price:price*EXCHANGE_RATE, dividendYield:divYield, frequency:freq, nameKo:name, desc:'Yahoo Finance' };
+        STOCK_USD[ticker] = {usd:price, yield:divYield};
+        STOCK_META[ticker] = {nameKo:name, desc:'Yahoo Finance', frequency:freq};
         addStock(ticker);
         clearSearch();
       };
