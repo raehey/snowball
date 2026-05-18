@@ -382,16 +382,23 @@ async function fetchJSON(url) {
   return await res.json();
 }
 
-// 환율 가져오기
+// 환율 가져오기 (여러 API 순차 시도)
 async function fetchExchangeRate() {
+  // 1차: open.er-api (직접)
   try {
-    // 프록시 없이 직접 (이 API는 CORS 허용)
     const res = await fetch('https://open.er-api.com/v6/latest/USD');
     const data = await res.json();
-    if (data?.rates?.KRW) {
-      EXCHANGE_RATE = Math.round(data.rates.KRW * 100) / 100;
-      return true;
-    }
+    if (data?.rates?.KRW) { EXCHANGE_RATE = Math.round(data.rates.KRW * 100) / 100; return true; }
+  } catch(e) {}
+  // 2차: open.er-api (프록시 경유)
+  try {
+    const data = await fetchJSON('https://open.er-api.com/v6/latest/USD');
+    if (data?.rates?.KRW) { EXCHANGE_RATE = Math.round(data.rates.KRW * 100) / 100; return true; }
+  } catch(e) {}
+  // 3차: exchangerate.host (프록시 경유)
+  try {
+    const data = await fetchJSON('https://api.exchangerate.host/latest?base=USD&symbols=KRW');
+    if (data?.rates?.KRW) { EXCHANGE_RATE = Math.round(data.rates.KRW * 100) / 100; return true; }
   } catch(e) {}
   return false;
 }
@@ -450,6 +457,8 @@ async function refreshMarketData() {
   }
   const footer = document.getElementById('footerInfo');
   if (footer) footer.innerHTML = `환율: 1 USD = ${EXCHANGE_RATE.toLocaleString()}원 (${lastDataUpdate})<br>배당소득세: 15.4% 적용<br><br>⚠️ 본 시뮬레이션은 참고용이며<br>투자 수익을 보장하지 않습니다.`;
+  // 환율 반영 후 금액 변환 표시도 업데이트
+  if (typeof updateConvertedCurrency === 'function') updateConvertedCurrency();
 }
 refreshMarketData();
 
