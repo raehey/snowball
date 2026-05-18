@@ -26,7 +26,7 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
 .section{background:var(--card);border-radius:16px;padding:20px;margin-bottom:16px}
 .section-title{font-size:14px;color:var(--text2);margin-bottom:12px;display:flex;align-items:center;gap:6px}
 .amount-input-wrap{position:relative}
-.amount-input{width:100%;background:var(--card2);border:2px solid var(--border);border-radius:12px;padding:16px;font-size:24px;color:var(--gold);text-align:right;font-weight:700;font-family:'SF Mono',monospace;outline:none;transition:border-color .2s}
+.amount-input{width:100%;background:var(--card2);border:2px solid var(--border);border-radius:12px;padding:16px 36px 16px 16px;font-size:24px;color:var(--gold);text-align:right;font-weight:700;font-family:'SF Mono',monospace;outline:none;transition:border-color .2s}
 .amount-input:focus{border-color:var(--gold)}
 .amount-unit{position:absolute;right:16px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:14px;pointer-events:none}
 .quick-amounts{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
@@ -150,6 +150,28 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
 .custom-resim:active{opacity:.8}
 .custom-resim:disabled{opacity:.4;cursor:not-allowed}
 
+/* 종목 검색 */
+.cs-search-wrap{display:flex;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
+.cs-search{flex:1;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;outline:none}
+.cs-search:focus{border-color:var(--gold)}
+.cs-search::placeholder{color:var(--text3)}
+.cs-search-btn{padding:8px 14px;background:var(--gold-dim);border:1px solid var(--gold);border-radius:8px;color:var(--gold);font-size:13px;font-weight:600;cursor:pointer}
+.cs-search-btn:active{opacity:.7}
+.cs-search-results{margin-top:8px;font-size:12px;color:var(--text2)}
+.cs-search-result{display:flex;justify-content:space-between;align-items:center;padding:8px;background:var(--card2);border-radius:8px;margin-top:6px;cursor:pointer;border:1px solid var(--border);transition:all .2s}
+.cs-search-result:active{border-color:var(--gold)}
+.cs-search-result .sr-info{font-size:11px;color:var(--text3)}
+
+/* 초기 매수 정보 */
+.init-purchase{background:var(--card);border-radius:14px;padding:16px;margin-bottom:16px;border:1px solid var(--border)}
+.init-purchase-title{font-size:14px;color:var(--gold);font-weight:600;margin-bottom:10px}
+.init-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-top:1px solid var(--border)}
+.init-row:first-of-type{border-top:none}
+.init-ticker{font-weight:600}
+.init-detail{color:var(--text2);font-family:'SF Mono',monospace}
+.init-shares{color:var(--gold);font-weight:700}
+.init-date{font-size:11px;color:var(--text3);margin-top:8px;text-align:right}
+
 .hidden{display:none}
 </style>
 </head>
@@ -164,6 +186,7 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
     <div class="section-title">투자 금액</div>
     <div class="amount-input-wrap">
       <input type="text" id="amountInput" class="amount-input" value="50,000,000" inputmode="numeric">
+      <span class="amount-unit" id="amountUnit">원</span>
     </div>
     <div class="currency-row">
       <div class="currency-toggle" id="currencyToggle" onclick="toggleCurrency()">
@@ -252,6 +275,9 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
     <!-- 핵심 숫자 -->
     <div class="result-grid" id="resultCards"></div>
 
+    <!-- 초기 매수 정보 -->
+    <div class="init-purchase" id="initPurchase"></div>
+
     <!-- 종목 상세 -->
     <div id="stockCards"></div>
 
@@ -267,6 +293,11 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
         <span class="custom-total-val" id="customTotal">100%</span>
       </div>
       <div class="custom-add" id="customAddBtns"></div>
+      <div class="cs-search-wrap">
+        <input type="text" class="cs-search" id="stockSearch" placeholder="티커 검색 (예: AAPL, MSFT...)" oninput="searchStock()">
+        <button class="cs-search-btn" onclick="searchStock()">검색</button>
+      </div>
+      <div id="searchResults"></div>
       <button class="custom-resim" id="customResimBtn" onclick="resimulate()">이 비중으로 다시 계산 🔄</button>
     </div>
 
@@ -303,7 +334,7 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
 const TAX_RATE = 0.154;
 const EXCHANGE_RATE = 1370;
 
-const STOCKS = {
+var STOCKS = {
   SCHD: { ticker:'SCHD', price:28*EXCHANGE_RATE, dividendYield:0.035, frequency:'quarterly', nameKo:'슈드', desc:'배당 성장 + 가치주' },
   JEPQ: { ticker:'JEPQ', price:57*EXCHANGE_RATE, dividendYield:0.095, frequency:'monthly', nameKo:'제이펙큐', desc:'나스닥 커버드콜' },
   JEPI: { ticker:'JEPI', price:56*EXCHANGE_RATE, dividendYield:0.072, frequency:'monthly', nameKo:'제피', desc:'S&P500 커버드콜' },
@@ -455,10 +486,12 @@ function toggleCurrency() {
     amountEl.value = Math.round(raw / EXCHANGE_RATE).toLocaleString();
     document.getElementById('currencyLabel').textContent = '$ 달러';
     document.getElementById('currencyAlt').textContent = '₩ 원화';
+    document.getElementById('amountUnit').textContent = '$';
   } else {
     amountEl.value = Math.round(raw * EXCHANGE_RATE).toLocaleString();
     document.getElementById('currencyLabel').textContent = '₩ 원화';
     document.getElementById('currencyAlt').textContent = '$ 달러';
+    document.getElementById('amountUnit').textContent = '원';
   }
   updateConvertedCurrency();
 }
@@ -594,6 +627,9 @@ function runSimulation() {
 
   // 차트 그리기
   drawChart(currentChart);
+
+  // 초기 매수 정보
+  renderInitPurchase(simResult.states, capital);
 
   // 커스텀 편집 UI 빌드
   if (!useCustom) customAllocs = PRESETS[currentStyle].map(p => ({...p}));
@@ -803,6 +839,95 @@ function resimulate() {
   runSimulation();
   currentStyle = origStyle;
   useCustom = true;
+}
+
+// ═══════════════════════════════════════════
+// 종목 검색 (내장 + 수동 추가)
+// ═══════════════════════════════════════════
+function searchStock() {
+  const q = document.getElementById('stockSearch').value.trim().toUpperCase();
+  const el = document.getElementById('searchResults');
+  if (!q) { el.innerHTML = ''; return; }
+
+  // 내장 종목 검색
+  const matches = Object.values(STOCKS).filter(s =>
+    s.ticker.includes(q) || s.nameKo.includes(q) || s.desc.includes(q)
+  );
+
+  const used = new Set(customAllocs.map(a => a.ticker));
+  let html = '';
+
+  if (matches.length > 0) {
+    for (const s of matches) {
+      if (used.has(s.ticker)) continue;
+      html += `<div class="cs-search-result" onclick="addStock('${s.ticker}');document.getElementById('stockSearch').value='';document.getElementById('searchResults').innerHTML='';">
+        <div><strong>${s.ticker}</strong> ${s.nameKo} · ${(s.dividendYield*100).toFixed(1)}%</div>
+        <div class="sr-info">$${(s.price/EXCHANGE_RATE).toFixed(0)} · ${s.frequency==='monthly'?'월배당':'분기배당'}</div>
+      </div>`;
+    }
+  }
+
+  // 내장에 없으면 직접 추가 안내
+  if (matches.length === 0 && q.length >= 1) {
+    html += `<div class="cs-search-result" onclick="addManualStock('${q}')">
+      <div><strong>${q}</strong> 직접 추가하기</div>
+      <div class="sr-info">주가·배당률 직접 입력</div>
+    </div>`;
+  }
+
+  el.innerHTML = html || '<div style="padding:8px;color:var(--text3);font-size:12px">검색 결과 없음</div>';
+}
+
+function addManualStock(ticker) {
+  const priceUSD = prompt(ticker + '의 현재 주가 (달러)를 입력하세요.\n예: 150');
+  if (!priceUSD || isNaN(priceUSD)) return;
+  const yieldPct = prompt(ticker + '의 배당률(%)을 입력하세요.\n예: 3.5');
+  if (!yieldPct || isNaN(yieldPct)) return;
+  const freq = prompt('배당 주기를 입력하세요.\n1 = 월배당, 2 = 분기배당');
+
+  STOCKS[ticker] = {
+    ticker: ticker,
+    price: parseFloat(priceUSD) * EXCHANGE_RATE,
+    dividendYield: parseFloat(yieldPct) / 100,
+    frequency: freq === '1' ? 'monthly' : 'quarterly',
+    nameKo: ticker,
+    desc: '직접 추가한 종목'
+  };
+
+  addStock(ticker);
+  document.getElementById('stockSearch').value = '';
+  document.getElementById('searchResults').innerHTML = '';
+}
+
+// ═══════════════════════════════════════════
+// 초기 매수 정보 렌더링
+// ═══════════════════════════════════════════
+function renderInitPurchase(states, capital) {
+  const today = new Date();
+  const dateStr = today.getFullYear() + '.' + String(today.getMonth()+1).padStart(2,'0') + '.' + String(today.getDate()).padStart(2,'0');
+
+  let html = `<div class="init-purchase-title">📋 오늘 바로 사면 (초기 매수)</div>`;
+  let totalUsed = 0;
+
+  for (const s of states) {
+    const stock = STOCKS[s.ticker];
+    const allocated = capital * s.weight;
+    const usd = (stock.price / EXCHANGE_RATE).toFixed(2);
+    totalUsed += s.initShares * stock.price;
+    html += `<div class="init-row">
+      <span><span class="init-ticker">${s.ticker}</span> × <span class="init-shares">${s.initShares}주</span></span>
+      <span class="init-detail">$${usd} × ${s.initShares} = ${fmtKRW(s.initShares * stock.price)}</span>
+    </div>`;
+  }
+
+  const leftover = capital - totalUsed;
+  html += `<div class="init-row" style="color:var(--text3)">
+    <span>남은 예수금</span>
+    <span class="init-detail">${fmtKRW(leftover)}</span>
+  </div>`;
+  html += `<div class="init-date">기준일: ${dateStr} | 환율: 1 USD = ${EXCHANGE_RATE.toLocaleString()}원</div>`;
+
+  document.getElementById('initPurchase').innerHTML = html;
 }
 
 // ─── 포맷 유틸 ───
