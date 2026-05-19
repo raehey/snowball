@@ -180,13 +180,14 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
 
 /* ═══ 하단 탭바 (인스타 스타일) ═══ */
 /* 하단 탭바 (인스타 스타일) */
-.tab-bar{position:fixed;bottom:34px;left:0;right:0;background:var(--bg);border-top:1px solid var(--border);display:flex;justify-content:space-around;align-items:center;height:50px;z-index:100}
-@supports(padding-bottom:env(safe-area-inset-bottom)){.tab-bar{bottom:env(safe-area-inset-bottom,34px)}}
+.tab-bar{position:fixed;left:0;right:0;background:var(--bg);border-top:1px solid var(--border);display:flex;justify-content:space-around;align-items:center;height:48px;bottom:0;padding-bottom:0;z-index:100}
+@supports(padding-bottom:env(safe-area-inset-bottom)){.tab-bar{height:calc(48px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);}}
+.tab-page{display:none;padding-bottom:100px}
+@supports(padding-bottom:env(safe-area-inset-bottom)){.tab-page{padding-bottom:calc(60px + env(safe-area-inset-bottom))}}
 .tab-item{display:flex;align-items:center;justify-content:center;cursor:pointer;padding:10px 14px;color:#8e8e8e;transition:color .15s;-webkit-tap-highlight-color:transparent}
 .tab-item.active{color:#fff}
 .tab-item svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .tab-item.active svg{stroke-width:2}
-.tab-page{display:none;padding-bottom:120px}
 .tab-page.active{display:block}
 
 /* 포트폴리오 탭 */
@@ -200,6 +201,9 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
 .hist-delete:active{border-color:var(--red);color:var(--red)}
 .hist-clear-all{padding:10px;background:none;border:1px solid var(--border);border-radius:10px;color:var(--text3);font-size:13px;cursor:pointer;width:100%;margin-top:8px;transition:all .2s}
 .hist-clear-all:active{border-color:var(--red);color:var(--red)}
+.hist-detail-view{background:var(--card);border-radius:14px;padding:16px;margin-top:10px;border:1px solid var(--gold)}
+.hist-detail-close{text-align:right;margin-bottom:8px}
+.hist-detail-close button{background:none;border:1px solid var(--border);border-radius:6px;color:var(--text3);padding:4px 12px;font-size:12px;cursor:pointer}
 .hist-date{font-size:11px;color:var(--text3)}
 .hist-summary{font-size:14px;margin-top:4px}
 .hist-detail{font-size:12px;color:var(--text2);margin-top:4px}
@@ -427,6 +431,11 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
     <div style="display:flex;gap:10px;margin-top:12px">
       <button class="sim-btn" style="flex:1;margin:0" onclick="savePortfolio()">💾 저장하기</button>
       <button class="sim-btn" style="flex:1;margin:0;background:var(--card);color:var(--gold);border:1px solid var(--gold)" onclick="loadPortfolioToCalc()">🧮 이걸로 계산</button>
+    </div>
+
+    <div class="section" style="margin-top:16px">
+      <div class="section-title">📋 저장된 포트폴리오</div>
+      <div id="pfSavedList"></div>
     </div>
   </div>
 
@@ -1676,7 +1685,7 @@ function switchTab(idx) {
     if (d) d.textContent = lastDataUpdate || '-';
   }
   // 포트폴리오 탭 진입 시 렌더
-  if (idx === 1) renderPortfolio();
+  if (idx === 1) { renderPortfolio(); renderSavedPortfolios(); }
   // 히스토리 탭 진입 시 목록 렌더
   if (idx === 2) renderHistory();
   // 스크롤 맨 위로
@@ -1692,12 +1701,25 @@ function saveToHistory(capital, style, period, finalAsset, monthlyDiv, cumDiv) {
     const now = new Date();
     const dateStr = now.getFullYear() + '.' + String(now.getMonth()+1).padStart(2,'0') + '.' + String(now.getDate()).padStart(2,'0') + ' ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
     const styleNames = {conservative:'안정형',balanced:'균형형',aggressive:'공격형',_custom:'커스텀'};
+
+    // 상세 데이터 저장 (종목별 + 연도별)
+    const final = simResult.records[simResult.records.length - 1];
+    const stocks = simResult.states.map(s => ({
+      ticker: s.ticker, initShares: s.initShares, finalShares: s.shares,
+      price: (s.stock.price / EXCHANGE_RATE).toFixed(2),
+      yield: (s.stock.dividendYield * 100).toFixed(1),
+      freq: s.stock.frequency === 'monthly' ? '월' : '분기'
+    }));
+    const yearly = simResult.records.filter(r => r.month % 12 === 0).map(r => ({
+      year: r.year, asset: r.totalAsset, div: r.mNet, cumDiv: r.cumNet
+    }));
+    const returnRate = ((finalAsset - capital) / capital * 100).toFixed(1);
+
     history.unshift({
-      date: dateStr,
-      capital, style: styleNames[style] || style, period,
-      finalAsset, monthlyDiv, cumDiv
+      date: dateStr, capital, style: styleNames[style] || style, period,
+      finalAsset, monthlyDiv, cumDiv, monthlyGross: final.mGross,
+      returnRate, stocks, yearly, exchangeRate: EXCHANGE_RATE
     });
-    // 최대 30개까지 보관
     if (history.length > 30) history.length = 30;
     localStorage.setItem('snowball_history', JSON.stringify(history));
   } catch(e) {}
@@ -1712,17 +1734,72 @@ function renderHistory() {
       return;
     }
     el.innerHTML = history.map((h, i) => `
-      <div class="hist-item">
-        <button class="hist-delete" onclick="deleteHistoryItem(${i})">✕</button>
+      <div class="hist-item" style="cursor:pointer" onclick="toggleHistDetail(${i})">
+        <button class="hist-delete" onclick="event.stopPropagation();deleteHistoryItem(${i})">✕</button>
         <div class="hist-date">${h.date}</div>
         <div class="hist-summary">${fmtKRW(h.capital)} → <span style="color:var(--gold);font-weight:700">${fmtKRW(h.finalAsset)}</span> (${h.period}년)</div>
         <div class="hist-detail">${h.style} | 월배당 ${fmtKRW(h.monthlyDiv)} | 누적 ${fmtKRW(h.cumDiv)}</div>
       </div>
+      <div class="hist-detail-view hidden" id="histDetail${i}"></div>
     `).join('') + '<button class="hist-clear-all" onclick="clearHistory()">전체 삭제</button>';
   } catch(e) { el.innerHTML = ''; }
 }
 
+function toggleHistDetail(idx) {
+  const el = document.getElementById('histDetail' + idx);
+  if (!el) return;
+  if (!el.classList.contains('hidden')) { el.classList.add('hidden'); return; }
+  // 다른 상세 닫기
+  document.querySelectorAll('.hist-detail-view').forEach(e => e.classList.add('hidden'));
+
+  try {
+    const history = JSON.parse(localStorage.getItem('snowball_history') || '[]');
+    const h = history[idx];
+    if (!h) return;
+
+    let html = `<div class="hist-detail-close"><button onclick="event.stopPropagation();document.getElementById('histDetail${idx}').classList.add('hidden')">닫기</button></div>`;
+
+    // 핵심 숫자
+    html += `<div class="result-grid" style="margin-bottom:12px">
+      <div class="result-card highlight"><div class="rc-label">${h.period}년 후 총 자산</div><div class="rc-value" style="font-size:18px">${fmtKRW(h.finalAsset)}</div><div class="rc-sub">+${h.returnRate || '?'}% 수익률</div></div>
+      <div class="result-card"><div class="rc-label">월 배당금 (세후)</div><div class="rc-value" style="font-size:18px">${fmtKRW(h.monthlyDiv)}</div>${h.monthlyGross ? '<div class="rc-sub">세전 '+fmtKRW(h.monthlyGross)+'</div>' : ''}</div>
+      <div class="result-card"><div class="rc-label">누적 배당금</div><div class="rc-value" style="font-size:18px">${fmtKRW(h.cumDiv)}</div></div>
+      <div class="result-card"><div class="rc-label">투자금</div><div class="rc-value" style="font-size:18px">${fmtKRW(h.capital)}</div><div class="rc-sub">${h.style}</div></div>
+    </div>`;
+
+    // 종목별 상세
+    if (h.stocks && h.stocks.length > 0) {
+      html += '<div style="font-size:13px;color:var(--text2);margin-bottom:6px;font-weight:600">종목별 결과</div>';
+      for (const s of h.stocks) {
+        html += `<div style="display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--border);font-size:12px">
+          <span><strong style="color:var(--gold)">${s.ticker}</strong> $${s.price} · ${s.freq}배당 · ${s.yield}%</span>
+          <span>${s.initShares}주 → <strong>${s.finalShares}주</strong> <span style="color:var(--green)">(+${s.finalShares - s.initShares})</span></span>
+        </div>`;
+      }
+    }
+
+    // 연도별 테이블
+    if (h.yearly && h.yearly.length > 0) {
+      html += '<div style="font-size:13px;color:var(--text2);margin:12px 0 6px;font-weight:600">연도별 추이</div>';
+      html += '<table class="yearly-table"><thead><tr><th>연차</th><th>월배당</th><th>총자산</th><th>누적배당</th></tr></thead><tbody>';
+      for (const y of h.yearly) {
+        const isLast = y.year === h.period;
+        html += `<tr${isLast?' style="font-weight:700"':''}>
+          <td>${y.year}년</td><td>${fmtKRW(y.div)}</td><td>${fmtKRW(y.asset)}</td><td>${fmtKRW(y.cumDiv)}</td>
+        </tr>`;
+      }
+      html += '</tbody></table>';
+    }
+
+    if (h.exchangeRate) html += `<div style="font-size:11px;color:var(--text3);margin-top:8px;text-align:right">환율: 1 USD = ${h.exchangeRate.toLocaleString()}원</div>`;
+
+    el.innerHTML = html;
+    el.classList.remove('hidden');
+  } catch(e) {}
+}
+
 function deleteHistoryItem(idx) {
+  if (!confirm('이 내역을 삭제할까요?')) return;
   try {
     const history = JSON.parse(localStorage.getItem('snowball_history') || '[]');
     history.splice(idx, 1);
@@ -1862,8 +1939,60 @@ function updateHoldingShares(idx, val) {
 }
 
 function savePortfolio() {
+  if (myHoldings.length === 0) { alert('종목을 추가해주세요.'); return; }
   localStorage.setItem('snowball_portfolio', JSON.stringify(myHoldings));
+  // 저장 내역에도 추가
+  try {
+    const list = JSON.parse(localStorage.getItem('snowball_pf_list') || '[]');
+    const now = new Date();
+    const dateStr = now.getFullYear() + '.' + String(now.getMonth()+1).padStart(2,'0') + '.' + String(now.getDate()).padStart(2,'0') + ' ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+    const total = myHoldings.reduce((sum, h) => { const s = STOCKS[h.ticker]; return sum + (s ? h.shares * s.price : 0); }, 0);
+    list.unshift({ date: dateStr, holdings: JSON.parse(JSON.stringify(myHoldings)), total });
+    if (list.length > 20) list.length = 20;
+    localStorage.setItem('snowball_pf_list', JSON.stringify(list));
+    renderSavedPortfolios();
+  } catch(e) {}
   alert('포트폴리오가 저장되었습니다!');
+}
+
+function renderSavedPortfolios() {
+  const el = document.getElementById('pfSavedList');
+  if (!el) return;
+  try {
+    const list = JSON.parse(localStorage.getItem('snowball_pf_list') || '[]');
+    if (list.length === 0) {
+      el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">저장된 내역이 없습니다</div>';
+      return;
+    }
+    el.innerHTML = list.map((p, i) => {
+      const tickers = p.holdings.map(h => h.ticker + ' ' + h.shares + '주').join(', ');
+      return `<div class="hist-item" style="padding-right:40px;cursor:pointer" onclick="loadSavedPf(${i})">
+        <button class="hist-delete" onclick="event.stopPropagation();deleteSavedPf(${i})">✕</button>
+        <div class="hist-date">#${i+1} · ${p.date}</div>
+        <div class="hist-summary" style="font-size:13px">${tickers}</div>
+        <div class="hist-detail">총 평가: <span style="color:var(--gold)">${fmtKRW(p.total)}</span></div>
+      </div>`;
+    }).join('');
+  } catch(e) { el.innerHTML = ''; }
+}
+
+function deleteSavedPf(idx) {
+  if (!confirm('이 포트폴리오를 삭제할까요?')) return;
+  try {
+    const list = JSON.parse(localStorage.getItem('snowball_pf_list') || '[]');
+    list.splice(idx, 1);
+    localStorage.setItem('snowball_pf_list', JSON.stringify(list));
+    renderSavedPortfolios();
+  } catch(e) {}
+}
+
+function loadSavedPf(idx) {
+  try {
+    const list = JSON.parse(localStorage.getItem('snowball_pf_list') || '[]');
+    myHoldings = JSON.parse(JSON.stringify(list[idx].holdings));
+    localStorage.setItem('snowball_portfolio', JSON.stringify(myHoldings));
+    renderPortfolio();
+  } catch(e) {}
 }
 
 function loadPortfolioToCalc() {
