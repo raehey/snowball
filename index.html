@@ -17,6 +17,12 @@
   --text:#fff;--text2:#aaa;--text3:#666;
   --green:#4CAF50;--red:#FF5252;--blue:#4A90D9;--purple:#9B59B6;
 }
+[data-theme="light"]{
+  --bg:#F2F2F7;--card:#FFFFFF;--card2:#F0F0F5;--border:#D5D5DC;
+  --gold:#996D00;--gold2:#7A5800;--gold-dim:rgba(153,109,0,.12);
+  --text:#1C1C1E;--text2:#636366;--text3:#AEAEB2;
+  --green:#34C759;--red:#FF3B30;--blue:#007AFF;--purple:#AF52DE;
+}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased;padding-bottom:env(safe-area-inset-bottom)}
 .container{max-width:500px;margin:0 auto;padding:16px}
 h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
@@ -185,7 +191,7 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
 .tab-page{display:none;padding-bottom:100px}
 @supports(padding-bottom:env(safe-area-inset-bottom)){.tab-page{padding-bottom:calc(60px + env(safe-area-inset-bottom))}}
 .tab-item{display:flex;align-items:center;justify-content:center;cursor:pointer;padding:10px 14px;color:#8e8e8e;transition:color .15s;-webkit-tap-highlight-color:transparent}
-.tab-item.active{color:#fff}
+.tab-item.active{color:var(--text)}
 .tab-item svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .tab-item.active svg{stroke-width:2}
 .tab-page.active{display:block}
@@ -223,6 +229,10 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
 .setting-item{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--border)}
 .setting-label{font-size:14px}
 .setting-value{font-size:13px;color:var(--text2)}
+.theme-switch{position:relative;width:50px;height:28px;background:var(--border);border-radius:14px;cursor:pointer;transition:background .3s;border:none;padding:0}
+.theme-switch::after{content:'🌙';position:absolute;left:2px;top:2px;width:24px;height:24px;background:var(--card);border-radius:12px;transition:transform .3s;display:flex;align-items:center;justify-content:center;font-size:14px}
+[data-theme="light"] .theme-switch{background:var(--gold)}
+[data-theme="light"] .theme-switch::after{content:'☀️';transform:translateX(22px)}
 
 .hidden{display:none}
 </style>
@@ -470,6 +480,10 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
   <div class="tab-page" id="tabSettings">
     <h1 style="font-size:18px;color:var(--gold);padding:20px 0 10px">⚙️ 설정</h1>
     <div class="section">
+      <div class="setting-item">
+        <span class="setting-label">테마</span>
+        <button class="theme-switch" id="themeToggle" onclick="toggleTheme()"></button>
+      </div>
       <div class="setting-item">
         <span class="setting-label">앱 버전</span>
         <span class="setting-value">1.0.0</span>
@@ -765,6 +779,29 @@ let currentChart = 0;
 let simResult = null;
 let isUSD = false; // 통화 모드: false=원화, true=달러
 
+// ─── 테마 색상 헬퍼 ───
+function tc(varName) {
+  return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+}
+
+// ─── 테마 전환 ───
+function toggleTheme() {
+  const html = document.documentElement;
+  const isLight = html.getAttribute('data-theme') === 'light';
+  const newTheme = isLight ? 'dark' : 'light';
+  html.setAttribute('data-theme', newTheme);
+  localStorage.setItem('snowball_theme', newTheme);
+  document.querySelector('meta[name="theme-color"]').content = newTheme === 'light' ? '#F2F2F7' : '#0D0D0D';
+}
+function restoreTheme() {
+  const saved = localStorage.getItem('snowball_theme');
+  if (saved === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+    document.querySelector('meta[name="theme-color"]').content = '#F2F2F7';
+  }
+}
+restoreTheme();
+
 // ─── 설정 저장/복원 (localStorage) ───
 function saveSettings() {
   try {
@@ -1048,9 +1085,9 @@ function drawChart(type) {
   const minV = 0;
 
   // Y축 그리드
-  ctx.strokeStyle = '#333';
+  ctx.strokeStyle = tc('--border');
   ctx.lineWidth = 0.5;
-  ctx.fillStyle = '#666';
+  ctx.fillStyle = tc('--text3');
   ctx.font = '10px sans-serif';
   ctx.textAlign = 'right';
   for (let i = 0; i <= 4; i++) {
@@ -1103,7 +1140,7 @@ function drawChart(type) {
     ctx.fill();
     // 첫해, 마지막, 중간만 라벨 표시
     if (i === 0 || i === points.length - 1 || i === Math.floor(points.length / 2)) {
-      ctx.fillStyle = '#fff';
+      ctx.fillStyle = tc('--text');
       ctx.fillText(type === 2 ? data[i] + '주' : fmtKRW(data[i]), p.x, p.y - 10);
       ctx.fillStyle = color;
     }
@@ -1148,7 +1185,7 @@ function drawPieChart() {
     ctx.closePath();
     ctx.fillStyle = color;
     ctx.fill();
-    ctx.strokeStyle = '#0D0D0D';
+    ctx.strokeStyle = tc('--bg');
     ctx.lineWidth = 2;
     ctx.stroke();
 
@@ -1180,16 +1217,16 @@ function drawPieChart() {
     ctx.arc(legendX, y, 5, 0, Math.PI * 2);
     ctx.fill();
     const stock = STOCKS[sl.ticker];
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = tc('--text');
     ctx.font = 'bold 11px sans-serif';
     ctx.fillText(sl.ticker, legendX + 12, y);
-    ctx.fillStyle = '#999';
+    ctx.fillStyle = tc('--text2');
     ctx.font = '10px sans-serif';
     ctx.fillText(Math.round(sl.pct * 100) + '% · ' + (stock.dividendYield * 100).toFixed(1) + '%', legendX + 12, y + 12);
   });
 
   // Title
-  ctx.fillStyle = '#FFD700';
+  ctx.fillStyle = tc('--gold');
   ctx.font = 'bold 12px sans-serif';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
