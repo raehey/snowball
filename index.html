@@ -180,12 +180,12 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
 
 /* ═══ 하단 탭바 (인스타 스타일) ═══ */
 /* 하단 탭바 (인스타 스타일) */
-.tab-bar{position:fixed;bottom:0;left:0;right:0;background:var(--bg);border-top:1px solid var(--border);display:flex;justify-content:space-around;align-items:center;height:50px;padding-bottom:env(safe-area-inset-bottom,0px);z-index:100}
+.tab-bar{position:fixed;bottom:0;left:0;right:0;background:var(--bg);border-top:1px solid var(--border);display:flex;justify-content:space-around;align-items:center;height:50px;margin-bottom:env(safe-area-inset-bottom,20px);z-index:100}
 .tab-item{display:flex;align-items:center;justify-content:center;cursor:pointer;padding:10px 14px;color:#8e8e8e;transition:color .15s;-webkit-tap-highlight-color:transparent}
 .tab-item.active{color:#fff}
 .tab-item svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .tab-item.active svg{stroke-width:2}
-.tab-page{display:none;padding-bottom:calc(50px + env(safe-area-inset-bottom,0px) + 10px)}
+.tab-page{display:none;padding-bottom:calc(50px + env(safe-area-inset-bottom,20px) + 20px)}
 .tab-page.active{display:block}
 
 /* 포트폴리오 탭 */
