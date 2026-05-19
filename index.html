@@ -172,6 +172,12 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
 .init-shares{color:var(--gold);font-weight:700}
 .init-date{font-size:11px;color:var(--text3);margin-top:8px;text-align:right}
 
+/* 결과 저장/공유 버튼 */
+.save-share-bar{display:flex;gap:10px;margin-bottom:16px}
+.save-share-btn{flex:1;padding:12px;border:2px solid var(--border);border-radius:12px;background:var(--card);color:var(--text);font-size:14px;font-weight:600;cursor:pointer;text-align:center;transition:all .2s}
+.save-share-btn:active{border-color:var(--gold);background:var(--gold-dim)}
+.save-share-btn .btn-icon{font-size:18px;display:block;margin-bottom:2px}
+
 .hidden{display:none}
 </style>
 </head>
@@ -275,6 +281,16 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
     <!-- 핵심 숫자 -->
     <div class="result-grid" id="resultCards"></div>
 
+    <!-- 저장/공유 버튼 -->
+    <div class="save-share-bar">
+      <button class="save-share-btn" onclick="saveResultImage()">
+        <span class="btn-icon">📸</span>결과 저장
+      </button>
+      <button class="save-share-btn" onclick="shareResult()">
+        <span class="btn-icon">📤</span>공유하기
+      </button>
+    </div>
+
     <!-- 초기 매수 정보 -->
     <div class="init-purchase" id="initPurchase"></div>
 
@@ -311,6 +327,7 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
         <div class="chart-tab active" onclick="switchChart(0)">자산 성장</div>
         <div class="chart-tab" onclick="switchChart(1)">월 배당금</div>
         <div class="chart-tab" onclick="switchChart(2)">주식 수</div>
+        <div class="chart-tab" onclick="switchChart(3)">포트폴리오</div>
       </div>
       <canvas id="chartCanvas" class="chart-canvas"></canvas>
     </div>
@@ -334,6 +351,19 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
 </div>
 
 <script>
+// roundRect 폴리필 (구형 브라우저 지원)
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+    if (typeof r === 'number') r = [r,r,r,r];
+    const [tl,tr,br,bl] = r;
+    this.moveTo(x+tl, y);
+    this.lineTo(x+w-tr, y); this.quadraticCurveTo(x+w, y, x+w, y+tr);
+    this.lineTo(x+w, y+h-br); this.quadraticCurveTo(x+w, y+h, x+w-br, y+h);
+    this.lineTo(x+bl, y+h); this.quadraticCurveTo(x, y+h, x, y+h-bl);
+    this.lineTo(x, y+tl); this.quadraticCurveTo(x, y, x+tl, y);
+    this.closePath(); return this;
+  };
+}
 // ═══════════════════════════════════════════
 // 데이터 & 엔진 (TypeScript → JS 변환)
 // ═══════════════════════════════════════════
@@ -461,6 +491,7 @@ async function refreshMarketData() {
   if (typeof updateConvertedCurrency === 'function') updateConvertedCurrency();
 }
 refreshMarketData();
+restoreSettings();
 
 var PRESETS = {
   conservative: [{ticker:'SCHD',weight:.60},{ticker:'DGRO',weight:.20},{ticker:'VYM',weight:.20}],
@@ -570,6 +601,53 @@ let currentChart = 0;
 let simResult = null;
 let isUSD = false; // 통화 모드: false=원화, true=달러
 
+// ─── 설정 저장/복원 (localStorage) ───
+function saveSettings() {
+  try {
+    const s = {
+      amount: document.getElementById('amountInput').value,
+      isUSD: isUSD,
+      style: currentStyle,
+      period: currentPeriod,
+      divGrowth: document.getElementById('divGrowth').value,
+      priceGrowth: document.getElementById('priceGrowth').value,
+      annualContrib: document.getElementById('annualContrib').value,
+      drip: document.getElementById('dripToggle').checked,
+      tax: document.getElementById('taxToggle').checked
+    };
+    localStorage.setItem('snowball_settings', JSON.stringify(s));
+  } catch(e) {}
+}
+function restoreSettings() {
+  try {
+    const raw = localStorage.getItem('snowball_settings');
+    if (!raw) return;
+    const s = JSON.parse(raw);
+    if (s.amount) document.getElementById('amountInput').value = s.amount;
+    if (s.isUSD) {
+      isUSD = true;
+      document.getElementById('currencyLabel').textContent = '$ 달러';
+      document.getElementById('currencyAlt').textContent = '₩ 원화';
+      document.getElementById('amountUnit').textContent = '$';
+    }
+    if (s.style) { currentStyle = s.style; selectStyle(s.style); }
+    if (s.period) {
+      currentPeriod = s.period;
+      const periodBtns = document.querySelectorAll('.period-btn');
+      periodBtns.forEach(b => b.classList.remove('active'));
+      const match = document.querySelector('.period-btn[onclick*="setPeriod(' + s.period + ')"]');
+      if (match) { match.classList.add('active'); }
+      else { document.getElementById('customPeriod').value = s.period; document.querySelector('.period-custom').classList.add('active'); }
+    }
+    if (s.divGrowth) document.getElementById('divGrowth').value = s.divGrowth;
+    if (s.priceGrowth) document.getElementById('priceGrowth').value = s.priceGrowth;
+    if (s.annualContrib) document.getElementById('annualContrib').value = s.annualContrib;
+    if (typeof s.drip === 'boolean') document.getElementById('dripToggle').checked = s.drip;
+    if (typeof s.tax === 'boolean') document.getElementById('taxToggle').checked = s.tax;
+    updateConvertedCurrency();
+  } catch(e) {}
+}
+
 // ─── 금액 입력 ───
 const amountEl = document.getElementById('amountInput');
 amountEl.addEventListener('input', function() {
@@ -656,6 +734,7 @@ function toggleAdvanced() {
 function runSimulation() {
   const capital = getAmount();
   if (capital < 100000) { alert('최소 10만원 이상 입력해주세요.'); return; }
+  saveSettings();
 
   const applyTax = document.getElementById('taxToggle').checked;
   const opts = {
@@ -674,29 +753,30 @@ function runSimulation() {
   const dripEffect = final.totalAsset - finalNoDrip.totalAsset;
   const returnRate = ((final.totalAsset - capital) / capital * 100).toFixed(1);
 
-  // 결과 카드
+  // 결과 카드 (count-up animation)
   document.getElementById('resultCards').innerHTML = `
     <div class="result-card highlight">
       <div class="rc-label">${currentPeriod}년 후 총 자산</div>
-      <div class="rc-value">${fmtKRW(final.totalAsset)}</div>
-      <div class="rc-sub">+${returnRate}% 수익률</div>
+      <div class="rc-value" data-countup="${final.totalAsset}">0원</div>
+      <div class="rc-sub">+<span data-countup-plain="${returnRate}">0</span>% 수익률</div>
     </div>
     <div class="result-card">
       <div class="rc-label">월 배당금 (세후)</div>
-      <div class="rc-value">${fmtKRW(final.mNet)}</div>
+      <div class="rc-value" data-countup="${final.mNet}">0원</div>
       <div class="rc-sub">세전 ${fmtKRW(final.mGross)}</div>
     </div>
     <div class="result-card">
       <div class="rc-label">누적 배당금</div>
-      <div class="rc-value">${fmtKRW(final.cumNet)}</div>
+      <div class="rc-value" data-countup="${final.cumNet}">0원</div>
       <div class="rc-sub">세전 ${fmtKRW(final.cumGross)}</div>
     </div>
     <div class="result-card">
       <div class="rc-label">DRIP 효과</div>
-      <div class="rc-value" style="color:var(--green)">+${fmtKRW(dripEffect)}</div>
+      <div class="rc-value" data-countup="${dripEffect}" data-prefix="+" style="color:var(--green)">+0원</div>
       <div class="rc-sub">미재투자 대비</div>
     </div>
   `;
+  animateResultCards();
 
   // 종목 카드
   let stockHTML = '';
@@ -766,6 +846,7 @@ function switchChart(idx) {
 
 function drawChart(type) {
   if (!simResult) return;
+  if (type === 3) { drawPieChart(); return; }
   const canvas = document.getElementById('chartCanvas');
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
@@ -866,6 +947,86 @@ function drawChart(type) {
   ctx.font = 'bold 12px sans-serif';
   ctx.textAlign = 'left';
   ctx.fillText(label, pad.left, pad.top - 10);
+}
+
+function drawPieChart() {
+  if (!simResult) return;
+  const canvas = document.getElementById('chartCanvas');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+  const W = rect.width, H = rect.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const states = simResult.states;
+  const total = states.reduce((s, st) => s + st.weight, 0);
+  const PIE_COLORS = ['#FFD700','#4CAF50','#4A90D9','#FF6B6B','#A855F7','#FF9F43','#00D2D3','#F368E0','#54A0FF','#5F27CD','#01A3A4','#C44569'];
+
+  const cx = W * 0.38, cy = H * 0.5;
+  const radius = Math.min(cx - 16, cy - 24);
+  let startAngle = -Math.PI / 2;
+
+  // Draw slices
+  const slices = [];
+  states.forEach((st, i) => {
+    const pct = st.weight / total;
+    const sweep = pct * Math.PI * 2;
+    const color = PIE_COLORS[i % PIE_COLORS.length];
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, radius, startAngle, startAngle + sweep);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.strokeStyle = '#0D0D0D';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Percentage label on slice (only if > 5%)
+    if (pct > 0.05) {
+      const mid = startAngle + sweep / 2;
+      const lx = cx + radius * 0.65 * Math.cos(mid);
+      const ly = cy + radius * 0.65 * Math.sin(mid);
+      ctx.fillStyle = '#000';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(Math.round(pct * 100) + '%', lx, ly);
+    }
+
+    slices.push({ ticker: st.ticker, pct, color });
+    startAngle += sweep;
+  });
+
+  // Legend on right side
+  const legendX = W * 0.68;
+  const legendStartY = Math.max(16, cy - slices.length * 11);
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  slices.forEach((sl, i) => {
+    const y = legendStartY + i * 22;
+    ctx.fillStyle = sl.color;
+    ctx.beginPath();
+    ctx.arc(legendX, y, 5, 0, Math.PI * 2);
+    ctx.fill();
+    const stock = STOCKS[sl.ticker];
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 11px sans-serif';
+    ctx.fillText(sl.ticker, legendX + 12, y);
+    ctx.fillStyle = '#999';
+    ctx.font = '10px sans-serif';
+    ctx.fillText(Math.round(sl.pct * 100) + '% · ' + (stock.dividendYield * 100).toFixed(1) + '%', legendX + 12, y + 12);
+  });
+
+  // Title
+  ctx.fillStyle = '#FFD700';
+  ctx.font = 'bold 12px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText('포트폴리오 비중', 16, 18);
 }
 
 // ═══════════════════════════════════════════
@@ -1115,7 +1276,229 @@ function renderInitPurchase(states, capital) {
   document.getElementById('initPurchase').innerHTML = html;
 }
 
+// ═══════════════════════════════════════════
+// 결과 이미지 저장 / 공유
+// ═══════════════════════════════════════════
+function buildResultCanvas() {
+  if (!simResult) return null;
+  const final = simResult.records[simResult.records.length - 1];
+  const capital = getAmount();
+  const returnRate = ((final.totalAsset - capital) / capital * 100).toFixed(1);
+  const applyTax = document.getElementById('taxToggle').checked;
+
+  const W = 720, H = 960;
+  const cvs = document.createElement('canvas');
+  cvs.width = W; cvs.height = H;
+  const c = cvs.getContext('2d');
+
+  // 배경
+  const bgGrad = c.createLinearGradient(0, 0, 0, H);
+  bgGrad.addColorStop(0, '#0D0D0D');
+  bgGrad.addColorStop(1, '#1a1205');
+  c.fillStyle = bgGrad;
+  c.fillRect(0, 0, W, H);
+
+  // 테두리 골드 라인
+  c.strokeStyle = 'rgba(255,215,0,0.3)';
+  c.lineWidth = 2;
+  c.roundRect(16, 16, W-32, H-32, 20);
+  c.stroke();
+
+  // 헤더
+  c.fillStyle = '#FFD700';
+  c.font = 'bold 28px -apple-system, sans-serif';
+  c.textAlign = 'center';
+  c.fillText('💰 눈덩이 DRIP 시뮬레이터', W/2, 70);
+
+  c.fillStyle = '#aaa';
+  c.font = '16px -apple-system, sans-serif';
+  const styleNames = { conservative: '🛡️ 안정형', balanced: '⚖️ 균형형', aggressive: '🔥 공격형' };
+  c.fillText(`${fmtKRW(capital)} · ${styleNames[currentStyle] || currentStyle} · ${currentPeriod}년`, W/2, 105);
+
+  // 구분선
+  c.strokeStyle = 'rgba(255,215,0,0.2)';
+  c.lineWidth = 1;
+  c.beginPath(); c.moveTo(60, 130); c.lineTo(W-60, 130); c.stroke();
+
+  // 메인 결과 카드 (2x2 그리드)
+  const cards = [
+    { label: `${currentPeriod}년 후 총 자산`, value: fmtKRW(final.totalAsset), sub: `+${returnRate}% 수익률`, color: '#FFD700' },
+    { label: '월 배당금 (세후)', value: fmtKRW(final.mNet), sub: `세전 ${fmtKRW(final.mGross)}`, color: '#fff' },
+    { label: '누적 배당금', value: fmtKRW(final.cumNet), sub: `세전 ${fmtKRW(final.cumGross)}`, color: '#fff' },
+    { label: 'DRIP 효과', value: `+${fmtKRW(final.totalAsset - simulateNoDRIP(capital, currentStyle, currentPeriod).records.slice(-1)[0].totalAsset)}`, sub: '미재투자 대비', color: '#4CAF50' }
+  ];
+
+  const cardW = 300, cardH = 110, gap = 20, startX = (W - cardW*2 - gap) / 2, startY = 155;
+  cards.forEach((cd, i) => {
+    const x = startX + (i % 2) * (cardW + gap);
+    const y = startY + Math.floor(i / 2) * (cardH + gap);
+
+    c.fillStyle = '#1A1A1A';
+    c.beginPath(); c.roundRect(x, y, cardW, cardH, 14); c.fill();
+    if (i === 0) { c.strokeStyle = 'rgba(255,215,0,0.5)'; c.lineWidth = 1.5; c.stroke(); }
+
+    c.fillStyle = '#aaa';
+    c.font = '13px -apple-system, sans-serif';
+    c.textAlign = 'left';
+    c.fillText(cd.label, x + 18, y + 30);
+
+    c.fillStyle = cd.color;
+    c.font = 'bold 26px -apple-system, sans-serif';
+    c.fillText(cd.value, x + 18, y + 66);
+
+    c.fillStyle = '#4CAF50';
+    c.font = '12px -apple-system, sans-serif';
+    c.fillText(cd.sub, x + 18, y + 90);
+  });
+
+  // 종목 리스트
+  const stockY = startY + 2 * (cardH + gap) + 30;
+  c.fillStyle = '#FFD700';
+  c.font = 'bold 16px -apple-system, sans-serif';
+  c.textAlign = 'left';
+  c.fillText('📊 포트폴리오 구성', 60, stockY);
+
+  simResult.states.forEach((s, i) => {
+    const stock = STOCKS[s.ticker];
+    const y = stockY + 30 + i * 36;
+    if (y > H - 120) return; // 공간 부족 시 스킵
+
+    c.fillStyle = '#1A1A1A';
+    c.beginPath(); c.roundRect(60, y - 10, W - 120, 30, 8); c.fill();
+
+    c.fillStyle = '#FFD700';
+    c.font = 'bold 13px -apple-system, sans-serif';
+    c.textAlign = 'left';
+    c.fillText(s.ticker, 78, y + 8);
+
+    c.fillStyle = '#aaa';
+    c.font = '12px -apple-system, sans-serif';
+    c.fillText(stock.nameKo, 150, y + 8);
+
+    c.fillStyle = '#fff';
+    c.font = '13px -apple-system, sans-serif';
+    c.textAlign = 'right';
+    c.fillText(`${(s.weight*100).toFixed(0)}%  ·  ${(stock.dividendYield*100).toFixed(1)}% 배당`, W - 78, y + 8);
+  });
+
+  // 연도별 미니 차트 (자산 성장)
+  const chartY = H - 200;
+  c.strokeStyle = 'rgba(255,215,0,0.2)';
+  c.beginPath(); c.moveTo(60, chartY - 10); c.lineTo(W-60, chartY - 10); c.stroke();
+
+  c.fillStyle = '#FFD700';
+  c.font = 'bold 16px -apple-system, sans-serif';
+  c.textAlign = 'left';
+  c.fillText('📈 자산 성장 추이', 60, chartY + 14);
+
+  const yearly = simResult.records.filter(r => r.month % 12 === 0);
+  const chartArea = { x: 60, y: chartY + 30, w: W - 120, h: 100 };
+  const maxVal = Math.max(...yearly.map(r => r.totalAsset)) * 1.05;
+  const pts = yearly.map((r, i) => ({
+    x: chartArea.x + (chartArea.w * i / (yearly.length - 1)),
+    y: chartArea.y + chartArea.h - (chartArea.h * r.totalAsset / maxVal)
+  }));
+
+  // 영역
+  c.beginPath();
+  c.moveTo(pts[0].x, chartArea.y + chartArea.h);
+  pts.forEach(p => c.lineTo(p.x, p.y));
+  c.lineTo(pts[pts.length-1].x, chartArea.y + chartArea.h);
+  c.closePath();
+  const cGrad = c.createLinearGradient(0, chartArea.y, 0, chartArea.y + chartArea.h);
+  cGrad.addColorStop(0, 'rgba(255,215,0,0.25)');
+  cGrad.addColorStop(1, 'rgba(255,215,0,0.02)');
+  c.fillStyle = cGrad;
+  c.fill();
+
+  // 라인
+  c.beginPath();
+  pts.forEach((p, i) => i === 0 ? c.moveTo(p.x, p.y) : c.lineTo(p.x, p.y));
+  c.strokeStyle = '#FFD700';
+  c.lineWidth = 2.5;
+  c.lineJoin = 'round';
+  c.stroke();
+
+  // 시작/끝 값
+  c.fillStyle = '#fff';
+  c.font = 'bold 11px -apple-system, sans-serif';
+  c.textAlign = 'left';
+  c.fillText(fmtKRW(yearly[0].totalAsset), pts[0].x, pts[0].y - 8);
+  c.textAlign = 'right';
+  c.fillText(fmtKRW(yearly[yearly.length-1].totalAsset), pts[pts.length-1].x, pts[pts.length-1].y - 8);
+
+  // 푸터
+  c.fillStyle = '#555';
+  c.font = '11px -apple-system, sans-serif';
+  c.textAlign = 'center';
+  const now = new Date();
+  c.fillText(`${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} · 눈덩이 DRIP 시뮬레이터 · 투자 참고용`, W/2, H - 30);
+
+  return cvs;
+}
+
+function saveResultImage() {
+  const cvs = buildResultCanvas();
+  if (!cvs) return;
+  cvs.toBlob(function(blob) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = '눈덩이_시뮬레이션_결과.png';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }, 'image/png');
+}
+
+function shareResult() {
+  const cvs = buildResultCanvas();
+  if (!cvs) return;
+  cvs.toBlob(async function(blob) {
+    const file = new File([blob], '눈덩이_결과.png', { type: 'image/png' });
+    const final = simResult.records[simResult.records.length - 1];
+    const shareData = {
+      title: '눈덩이 DRIP 시뮬레이션',
+      text: `${currentPeriod}년 후 총 자산: ${fmtKRW(final.totalAsset)} | 월 배당: ${fmtKRW(final.mNet)}`,
+      files: [file]
+    };
+    if (navigator.canShare && navigator.canShare(shareData)) {
+      try { await navigator.share(shareData); } catch (e) { /* 취소 */ }
+    } else if (navigator.share) {
+      // 파일 공유 미지원 시 텍스트만
+      try { await navigator.share({ title: shareData.title, text: shareData.text }); } catch (e) {}
+    } else {
+      // Web Share API 미지원 — 이미지 다운로드로 대체
+      saveResultImage();
+    }
+  }, 'image/png');
+}
+
 // ─── 포맷 유틸 ───
+function animateResultCards() {
+  const duration = 800;
+  const fps = 40;
+  const steps = Math.ceil(duration / (1000 / fps));
+  const els = document.querySelectorAll('[data-countup]');
+  const plainEls = document.querySelectorAll('[data-countup-plain]');
+  let step = 0;
+  const targets = Array.from(els).map(el => parseFloat(el.dataset.countup));
+  const prefixes = Array.from(els).map(el => el.dataset.prefix || '');
+  const plainTargets = Array.from(plainEls).map(el => parseFloat(el.dataset.countupPlain));
+  function tick() {
+    step++;
+    const t = Math.min(step / steps, 1);
+    const ease = 1 - Math.pow(1 - t, 3); // easeOutCubic
+    els.forEach((el, i) => {
+      el.textContent = prefixes[i] + fmtKRW(targets[i] * ease);
+    });
+    plainEls.forEach((el, i) => {
+      el.textContent = (plainTargets[i] * ease).toFixed(1);
+    });
+    if (t < 1) setTimeout(tick, 1000 / fps);
+  }
+  tick();
+}
+
 function fmtKRW(v) {
   if (v >= 100000000) return (v / 100000000).toFixed(2) + '억원';
   if (v >= 10000) return Math.round(v / 10000).toLocaleString() + '만원';
