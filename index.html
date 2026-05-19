@@ -180,12 +180,13 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
 
 /* ═══ 하단 탭바 (인스타 스타일) ═══ */
 /* 하단 탭바 (인스타 스타일) */
-.tab-bar{position:fixed;bottom:0;left:0;right:0;background:var(--bg);border-top:1px solid var(--border);display:flex;justify-content:space-around;align-items:center;height:50px;margin-bottom:env(safe-area-inset-bottom,20px);z-index:100}
+.tab-bar{position:fixed;bottom:34px;left:0;right:0;background:var(--bg);border-top:1px solid var(--border);display:flex;justify-content:space-around;align-items:center;height:50px;z-index:100}
+@supports(padding-bottom:env(safe-area-inset-bottom)){.tab-bar{bottom:env(safe-area-inset-bottom,34px)}}
 .tab-item{display:flex;align-items:center;justify-content:center;cursor:pointer;padding:10px 14px;color:#8e8e8e;transition:color .15s;-webkit-tap-highlight-color:transparent}
 .tab-item.active{color:#fff}
 .tab-item svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .tab-item.active svg{stroke-width:2}
-.tab-page{display:none;padding-bottom:calc(50px + env(safe-area-inset-bottom,20px) + 20px)}
+.tab-page{display:none;padding-bottom:120px}
 .tab-page.active{display:block}
 
 /* 포트폴리오 탭 */
@@ -194,8 +195,11 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
 .pf-empty{text-align:center;padding:60px 20px;color:var(--text3)}
 
 /* 히스토리 탭 */
-.hist-item{background:var(--card);border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer;transition:border-color .2s;border:1px solid transparent}
-.hist-item:active{border-color:var(--gold)}
+.hist-item{background:var(--card);border-radius:14px;padding:14px;margin-bottom:10px;border:1px solid transparent;position:relative}
+.hist-delete{position:absolute;top:10px;right:10px;width:24px;height:24px;border-radius:50%;background:none;border:1px solid var(--border);color:var(--text3);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.hist-delete:active{border-color:var(--red);color:var(--red)}
+.hist-clear-all{padding:10px;background:none;border:1px solid var(--border);border-radius:10px;color:var(--text3);font-size:13px;cursor:pointer;width:100%;margin-top:8px;transition:all .2s}
+.hist-clear-all:active{border-color:var(--red);color:var(--red)}
 .hist-date{font-size:11px;color:var(--text3)}
 .hist-summary{font-size:14px;margin-top:4px}
 .hist-detail{font-size:12px;color:var(--text2);margin-top:4px}
@@ -391,18 +395,39 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
   </div>
   </div><!-- /탭1 계산 -->
 
-  <!-- ═══ 탭 2: 포트폴리오 ═══ -->
+  <!-- ═══ 탭 2: 내 주식 포트폴리오 ═══ -->
   <div class="tab-page" id="tabPortfolio">
-    <h1 style="font-size:18px;color:var(--gold);padding:20px 0 10px">📁 내 포트폴리오</h1>
-    <p class="subtitle" style="margin-bottom:16px">저장한 포트폴리오를 관리하세요</p>
-    <div id="portfolioList">
-      <div class="pf-empty">
-        <div style="font-size:40px;margin-bottom:12px">📂</div>
-        <div>저장된 포트폴리오가 없습니다</div>
-        <div style="font-size:12px;margin-top:8px;color:var(--text3)">계산 탭에서 시뮬레이션을 실행하면<br>자동으로 저장됩니다</div>
+    <h1 style="font-size:18px;color:var(--gold);padding:20px 0 10px">📊 내 포트폴리오</h1>
+    <p class="subtitle" style="margin-bottom:16px">현재 보유 중인 주식을 설정하세요</p>
+
+    <div class="section">
+      <div class="section-title">보유 종목 추가</div>
+      <div class="cs-search-wrap" style="border-top:none;padding-top:0;margin-top:0">
+        <input type="text" class="cs-search" id="pfSearch" placeholder="티커 검색 (예: SCHD, JEPQ...)" oninput="searchPortfolioStock()">
+        <button class="cs-search-btn" onclick="searchPortfolioStock()">검색</button>
+      </div>
+      <div id="pfSearchResults"></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+        <div style="font-size:11px;color:var(--text3);width:100%;margin-bottom:2px">📌 월배당</div>
+        <div id="pfAddMonthly"></div>
+        <div style="font-size:11px;color:var(--text3);width:100%;margin-top:6px;margin-bottom:2px">📌 분기배당</div>
+        <div id="pfAddQuarterly"></div>
       </div>
     </div>
-    <button class="sim-btn" style="margin-top:16px" onclick="switchTab(0)">계산하러 가기 →</button>
+
+    <div class="section" style="margin-top:12px">
+      <div class="section-title">내 보유 종목</div>
+      <div id="pfHoldings">
+        <div class="pf-empty" style="padding:30px 10px">
+          <div>종목을 추가해주세요</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:12px">
+      <button class="sim-btn" style="flex:1;margin:0" onclick="savePortfolio()">💾 저장하기</button>
+      <button class="sim-btn" style="flex:1;margin:0;background:var(--card);color:var(--gold);border:1px solid var(--gold)" onclick="loadPortfolioToCalc()">🧮 이걸로 계산</button>
+    </div>
   </div>
 
   <!-- ═══ 탭 3: 히스토리 ═══ -->
@@ -1650,6 +1675,8 @@ function switchTab(idx) {
     if (r) r.textContent = '1 USD = ' + EXCHANGE_RATE.toLocaleString() + '원';
     if (d) d.textContent = lastDataUpdate || '-';
   }
+  // 포트폴리오 탭 진입 시 렌더
+  if (idx === 1) renderPortfolio();
   // 히스토리 탭 진입 시 목록 렌더
   if (idx === 2) renderHistory();
   // 스크롤 맨 위로
@@ -1684,14 +1711,24 @@ function renderHistory() {
       el.innerHTML = '<div class="pf-empty"><div style="font-size:40px;margin-bottom:12px">📝</div><div>아직 시뮬레이션 내역이 없습니다</div></div>';
       return;
     }
-    el.innerHTML = history.map(h => `
+    el.innerHTML = history.map((h, i) => `
       <div class="hist-item">
+        <button class="hist-delete" onclick="deleteHistoryItem(${i})">✕</button>
         <div class="hist-date">${h.date}</div>
         <div class="hist-summary">${fmtKRW(h.capital)} → <span style="color:var(--gold);font-weight:700">${fmtKRW(h.finalAsset)}</span> (${h.period}년)</div>
         <div class="hist-detail">${h.style} | 월배당 ${fmtKRW(h.monthlyDiv)} | 누적 ${fmtKRW(h.cumDiv)}</div>
       </div>
-    `).join('');
+    `).join('') + '<button class="hist-clear-all" onclick="clearHistory()">전체 삭제</button>';
   } catch(e) { el.innerHTML = ''; }
+}
+
+function deleteHistoryItem(idx) {
+  try {
+    const history = JSON.parse(localStorage.getItem('snowball_history') || '[]');
+    history.splice(idx, 1);
+    localStorage.setItem('snowball_history', JSON.stringify(history));
+    renderHistory();
+  } catch(e) {}
 }
 
 function clearHistory() {
@@ -1746,6 +1783,160 @@ function sendChat() {
     messagesEl.innerHTML += `<div class="chat-bubble ai">${reply.replace(/\n/g,'<br>')}</div>`;
     messagesEl.scrollTop = messagesEl.scrollHeight;
   }, 300);
+}
+
+// ═══════════════════════════════════════════
+// 포트폴리오 탭 (내 보유 주식 설정)
+// ═══════════════════════════════════════════
+var myHoldings = []; // [{ticker, shares}, ...]
+
+function loadSavedPortfolio() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('snowball_portfolio') || '[]');
+    if (saved.length > 0) myHoldings = saved;
+  } catch(e) {}
+}
+loadSavedPortfolio();
+
+function renderPortfolio() {
+  const el = document.getElementById('pfHoldings');
+  if (myHoldings.length === 0) {
+    el.innerHTML = '<div class="pf-empty" style="padding:30px 10px"><div>종목을 추가해주세요</div></div>';
+  } else {
+    el.innerHTML = myHoldings.map((h, i) => {
+      const s = STOCKS[h.ticker];
+      const usd = s ? (s.price / EXCHANGE_RATE).toFixed(2) : '?';
+      const yld = s ? (s.dividendYield * 100).toFixed(1) + '%' : '?';
+      const freq = s ? (s.frequency === 'monthly' ? '월배당' : '분기배당') : '';
+      const value = s ? fmtKRW(h.shares * s.price) : '-';
+      return `<div class="hist-item" style="padding-right:40px">
+        <button class="hist-delete" onclick="removeHolding(${i})">✕</button>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><strong style="color:var(--gold)">${h.ticker}</strong> <span style="color:var(--text3);font-size:12px">${s?.nameKo||''} · ${freq} · ${yld}</span></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+          <div style="font-size:13px">$${usd} × <input type="number" value="${h.shares}" min="0" style="width:60px;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:4px 6px;color:var(--text);text-align:center;font-size:13px;outline:none" onchange="updateHoldingShares(${i},this.value)">주</div>
+          <div style="font-size:14px;font-weight:600;color:var(--text)">${value}</div>
+        </div>
+      </div>`;
+    }).join('');
+
+    // 총 평가액
+    const total = myHoldings.reduce((sum, h) => {
+      const s = STOCKS[h.ticker];
+      return sum + (s ? h.shares * s.price : 0);
+    }, 0);
+    el.innerHTML += `<div style="text-align:right;padding:10px 0;font-size:15px;color:var(--gold);font-weight:700">총 평가: ${fmtKRW(total)}</div>`;
+  }
+
+  // 추가 버튼 렌더링
+  const used = new Set(myHoldings.map(h => h.ticker));
+  let mHTML = '', qHTML = '';
+  for (const t of Object.keys(STOCKS)) {
+    const s = STOCKS[t];
+    const added = used.has(t);
+    const btn = `<div class="custom-add-btn ${added?'added':''}" style="display:inline-block;margin:2px" onclick="${added?'':'addHolding(\''+t+'\')'}">${added?'✓ ':'+ '}${t}</div>`;
+    if (s.frequency === 'monthly') mHTML += btn;
+    else qHTML += btn;
+  }
+  const mEl = document.getElementById('pfAddMonthly');
+  const qEl = document.getElementById('pfAddQuarterly');
+  if (mEl) mEl.innerHTML = mHTML;
+  if (qEl) qEl.innerHTML = qHTML;
+}
+
+function addHolding(ticker) {
+  if (myHoldings.find(h => h.ticker === ticker)) return;
+  myHoldings.push({ ticker, shares: 0 });
+  renderPortfolio();
+}
+
+function removeHolding(idx) {
+  myHoldings.splice(idx, 1);
+  renderPortfolio();
+}
+
+function updateHoldingShares(idx, val) {
+  myHoldings[idx].shares = parseInt(val) || 0;
+  renderPortfolio();
+}
+
+function savePortfolio() {
+  localStorage.setItem('snowball_portfolio', JSON.stringify(myHoldings));
+  alert('포트폴리오가 저장되었습니다!');
+}
+
+function loadPortfolioToCalc() {
+  if (myHoldings.length === 0) { alert('보유 종목이 없습니다.'); return; }
+  // 총 평가액 기준으로 비중 계산해서 커스텀 프리셋 생성
+  const total = myHoldings.reduce((sum, h) => {
+    const s = STOCKS[h.ticker];
+    return sum + (s ? h.shares * s.price : 0);
+  }, 0);
+  if (total <= 0) { alert('주식 수를 입력해주세요.'); return; }
+
+  customAllocs = myHoldings.filter(h => h.shares > 0).map(h => {
+    const s = STOCKS[h.ticker];
+    return { ticker: h.ticker, weight: (h.shares * s.price) / total };
+  });
+  useCustom = true;
+  // 금액도 설정
+  isUSD = false;
+  document.getElementById('amountInput').value = Math.round(total).toLocaleString();
+  document.getElementById('amountUnit').textContent = '원';
+  updateConvertedCurrency();
+  switchTab(0);
+}
+
+function searchPortfolioStock() {
+  const q = document.getElementById('pfSearch').value.trim().toUpperCase();
+  const el = document.getElementById('pfSearchResults');
+  if (!q) { el.innerHTML = ''; return; }
+  const used = new Set(myHoldings.map(h => h.ticker));
+  const matches = Object.values(STOCKS).filter(s => s.ticker.includes(q) || s.nameKo.includes(q));
+  let html = '';
+  for (const s of matches) {
+    if (used.has(s.ticker)) continue;
+    html += `<div class="cs-search-result" onclick="addHolding('${s.ticker}');document.getElementById('pfSearch').value='';document.getElementById('pfSearchResults').innerHTML='';renderPortfolio()">
+      <div><strong>${s.ticker}</strong> ${s.nameKo} · ${(s.dividendYield*100).toFixed(1)}%</div>
+      <div class="sr-info">$${(s.price/EXCHANGE_RATE).toFixed(2)} · ${s.frequency==='monthly'?'월배당':'분기배당'}</div>
+    </div>`;
+  }
+  if (!STOCKS[q] && q.length >= 2) {
+    html += `<div class="cs-search-result" id="pfYahooResult" style="opacity:.6"><div><strong>${q}</strong> 검색 중...</div></div>`;
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => fetchAndAddPortfolioStock(q), 500);
+  }
+  el.innerHTML = html || '';
+}
+
+async function fetchAndAddPortfolioStock(ticker) {
+  const el = document.getElementById('pfYahooResult');
+  if (!el) return;
+  try {
+    const data = await fetchJSON(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=1y&interval=1mo&events=div`);
+    const result = data?.chart?.result?.[0];
+    const meta = result?.meta;
+    if (meta && meta.regularMarketPrice > 0) {
+      const price = meta.regularMarketPrice;
+      const name = meta.shortName || ticker;
+      let annualDiv = 0, freq = 'quarterly', divCount = 0;
+      const events = result?.events?.dividends;
+      if (events) { const de = Object.values(events); divCount = de.length; annualDiv = de.reduce((s,d)=>s+(d.amount||0),0); if(divCount>=10)freq='monthly';else if(divCount>=3)freq='quarterly';else freq='annually'; }
+      const divYield = price > 0 ? annualDiv / price : 0;
+      el.style.opacity = '1';
+      el.innerHTML = `<div><strong>${ticker}</strong> ${name} · $${price.toFixed(2)} · ${(divYield*100).toFixed(1)}%</div><div class="sr-info">클릭하여 추가</div>`;
+      el.onclick = () => {
+        STOCKS[ticker] = { ticker, price:price*EXCHANGE_RATE, dividendYield:divYield, frequency:freq, nameKo:name, desc:'Yahoo Finance' };
+        STOCK_USD[ticker] = {usd:price, yield:divYield};
+        STOCK_META[ticker] = {nameKo:name, desc:'Yahoo Finance', frequency:freq};
+        addHolding(ticker);
+        document.getElementById('pfSearch').value = '';
+        document.getElementById('pfSearchResults').innerHTML = '';
+        renderPortfolio();
+      };
+    } else { el.innerHTML = `<div>${ticker} 찾을 수 없음</div>`; }
+  } catch(e) { el.innerHTML = `<div>${ticker} 검색 실패</div>`; }
 }
 
 // ─── 포맷 유틸 ───
