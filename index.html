@@ -7,10 +7,21 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="눈덩이">
 <meta name="theme-color" content="#0D0D0D">
+<meta name="description" content="배당주에 투자하면 10~20년 뒤 자산이 얼마나 불어날까? 눈덩이 시뮬레이터로 복리 재투자(DRIP) 효과를 확인해 보세요!">
+<meta property="og:type" content="website">
+<meta property="og:title" content="눈덩이 — 내 배당금은 얼마일까?!">
+<meta property="og:description" content="배당주에 투자하면 10~20년 뒤 자산이 얼마나 불어날까? 복리 재투자(DRIP) 효과를 시뮬레이션해 보세요.">
+<meta property="og:image" content="icon-512.png">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="눈덩이 — 배당주 복리 재투자 시뮬레이터">
+<meta name="twitter:description" content="배당주 투자 시 복리 재투자 효과를 시뮬레이션해 보세요.">
+<meta name="twitter:image" content="icon-512.png">
 <link rel="manifest" href="manifest.json">
 <title>내 배당금은 얼마일까?!</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
 :root{
   --bg:#0D0D0D;--card:#1A1A1A;--card2:#222;--border:#333;
   --gold:#FFD700;--gold2:#FFC107;--gold-dim:rgba(255,215,0,.15);
@@ -79,7 +90,12 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
 .chart-tabs{display:flex;gap:6px;margin-bottom:12px}
 .chart-tab{flex:1;padding:8px;background:var(--card2);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-size:12px;cursor:pointer;text-align:center;transition:all .2s}
 .chart-tab.active{background:var(--gold-dim);border-color:var(--gold);color:var(--gold)}
-.chart-canvas{width:100%;height:220px;border-radius:12px;background:var(--card2)}
+.chart-canvas{width:100%;height:220px;border-radius:12px;background:var(--card2);touch-action:none}
+.chart-wrap{position:relative}
+.chart-tooltip{position:absolute;pointer-events:none;background:var(--card);border:1px solid var(--gold);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--text);white-space:nowrap;transform:translate(-50%,-100%);margin-top:-10px;opacity:0;transition:opacity .15s;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.chart-tooltip.show{opacity:1}
+.chart-tooltip .tt-label{color:var(--text2);font-size:10px}
+.chart-tooltip .tt-value{font-weight:700;color:var(--gold);font-size:14px}
 
 /* 연도별 테이블 */
 .yearly-table{width:100%;border-collapse:collapse;font-size:12px}
@@ -235,6 +251,17 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
 [data-theme="light"] .theme-switch::after{content:'☀️';transform:translateX(22px)}
 
 .hidden{display:none}
+
+/* 섹션 등장 애니메이션 */
+@keyframes fadeSlideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeSlideUp .5s ease-out both}
+.fade-in-d1{animation-delay:.1s}
+.fade-in-d2{animation-delay:.2s}
+.fade-in-d3{animation-delay:.3s}
+
+/* 탭 페이지 전환 */
+.tab-page.active{display:block;animation:tabFadeIn .25s ease-out}
+@keyframes tabFadeIn{from{opacity:0}to{opacity:1}}
 </style>
 </head>
 <body>
@@ -388,7 +415,10 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
         <div class="chart-tab" onclick="switchChart(2)">주식 수</div>
         <div class="chart-tab" onclick="switchChart(3)">포트폴리오</div>
       </div>
-      <canvas id="chartCanvas" class="chart-canvas"></canvas>
+      <div class="chart-wrap">
+        <canvas id="chartCanvas" class="chart-canvas"></canvas>
+        <div class="chart-tooltip" id="chartTooltip"><div class="tt-label"></div><div class="tt-value"></div></div>
+      </div>
     </div>
 
     <!-- 연도별 테이블 -->
@@ -495,6 +525,10 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
       <div class="setting-item">
         <span class="setting-label">시세 기준</span>
         <span class="setting-value" id="settingDate">-</span>
+      </div>
+      <div class="setting-item" onclick="shareApp()" style="cursor:pointer">
+        <span class="setting-label" style="color:var(--gold)">📤 이 앱 공유하기</span>
+        <span class="setting-value" id="shareAppStatus">→</span>
       </div>
       <div class="setting-item" onclick="clearHistory()" style="cursor:pointer">
         <span class="setting-label" style="color:var(--red)">시뮬레이션 내역 삭제</span>
@@ -1007,14 +1041,27 @@ function runSimulation() {
   document.getElementById('stockCards').innerHTML = stockHTML;
 
   // 연도별 테이블
-  let tableHTML = '<thead><tr><th>연차</th><th>월배당(세후)</th><th>총자산</th><th>증가율</th></tr></thead><tbody>';
-  for (const r of simResult.records) {
-    if (r.month % 12 !== 0) continue;
-    const rate = ((r.totalAsset - capital) / capital * 100).toFixed(1);
-    const isLast = r.month === currentPeriod * 12;
-    tableHTML += `<tr${isLast ? ' style="font-weight:700"' : ''}>
-      <td>${r.year}년</td><td>${fmtKRW(r.mNet)}</td><td>${fmtKRW(r.totalAsset)}</td><td style="color:var(--green)">+${rate}%</td>
-    </tr>`;
+  let tableHTML;
+  if (applyTax) {
+    tableHTML = '<thead><tr><th>연차</th><th>월배당(세전)</th><th>월배당(세후)</th><th>총자산</th><th>증가율</th></tr></thead><tbody>';
+    for (const r of simResult.records) {
+      if (r.month % 12 !== 0) continue;
+      const rate = ((r.totalAsset - capital) / capital * 100).toFixed(1);
+      const isLast = r.month === currentPeriod * 12;
+      tableHTML += `<tr${isLast ? ' style="font-weight:700"' : ''}>
+        <td>${r.year}년</td><td style="color:var(--text2)">${fmtKRW(r.mGross)}</td><td>${fmtKRW(r.mNet)}</td><td>${fmtKRW(r.totalAsset)}</td><td style="color:var(--green)">+${rate}%</td>
+      </tr>`;
+    }
+  } else {
+    tableHTML = '<thead><tr><th>연차</th><th>월배당</th><th>총자산</th><th>증가율</th></tr></thead><tbody>';
+    for (const r of simResult.records) {
+      if (r.month % 12 !== 0) continue;
+      const rate = ((r.totalAsset - capital) / capital * 100).toFixed(1);
+      const isLast = r.month === currentPeriod * 12;
+      tableHTML += `<tr${isLast ? ' style="font-weight:700"' : ''}>
+        <td>${r.year}년</td><td>${fmtKRW(r.mNet)}</td><td>${fmtKRW(r.totalAsset)}</td><td style="color:var(--green)">+${rate}%</td>
+      </tr>`;
+    }
   }
   tableHTML += '</tbody>';
   document.getElementById('yearlyTable').innerHTML = tableHTML;
@@ -1032,11 +1079,20 @@ function runSimulation() {
   if (!useCustom) customAllocs = PRESETS[currentStyle].map(p => ({...p}));
   buildCustomUI();
 
-  // 결과 표시
-  document.getElementById('results').classList.remove('hidden');
+  // 결과 표시 (섹션별 순차 페이드인)
+  const resEl = document.getElementById('results');
+  resEl.classList.remove('hidden');
+  // 순차 등장 애니메이션 적용
+  const animTargets = resEl.querySelectorAll('.result-grid, .save-share-bar, .init-purchase, #stockCards, .custom-section, .section');
+  animTargets.forEach((el, i) => {
+    el.classList.remove('fade-in','fade-in-d1','fade-in-d2','fade-in-d3');
+    void el.offsetWidth; // reflow 트리거
+    el.classList.add('fade-in');
+    if (i > 0) el.classList.add('fade-in-d' + Math.min(i, 3));
+  });
   // 차트는 DOM이 보인 후 그려야 canvas 사이즈가 잡힘
   setTimeout(() => { drawChart(currentChart); }, 50);
-  document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+  resEl.scrollIntoView({ behavior: 'smooth' });
 }
 
 // ═══════════════════════════════════════════
@@ -1048,9 +1104,11 @@ function switchChart(idx) {
   drawChart(idx);
 }
 
+let chartMeta = null; // {points, data, labels, unit, color, type}
+
 function drawChart(type) {
   if (!simResult) return;
-  if (type === 3) { drawPieChart(); return; }
+  if (type === 3) { drawPieChart(); chartMeta = null; return; }
   const canvas = document.getElementById('chartCanvas');
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
@@ -1109,6 +1167,9 @@ function drawChart(type) {
     x: pad.left + (cW * i / (data.length - 1)),
     y: pad.top + cH - (cH * (v - minV) / (maxV - minV))
   }));
+
+  // 터치 인스펙터용 메타 저장
+  chartMeta = { points, data, labels: yearly.map(r => r.year + '년'), unit: type === 2 ? '주' : 'krw', color, type };
 
   // 영역
   ctx.beginPath();
@@ -1232,6 +1293,98 @@ function drawPieChart() {
   ctx.textBaseline = 'alphabetic';
   ctx.fillText('포트폴리오 비중', 16, 18);
 }
+
+// ─── 차트 터치/마우스 인스펙터 ───
+(function() {
+  let inspectActive = false;
+  function getCanvasXY(e) {
+    const canvas = document.getElementById('chartCanvas');
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches ? e.touches[0] : e;
+    return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
+  }
+  function showInspect(e) {
+    if (!chartMeta || currentChart === 3) return;
+    e.preventDefault();
+    inspectActive = true;
+    const pos = getCanvasXY(e);
+    const { points, data, labels, unit } = chartMeta;
+    // 가장 가까운 포인트 찾기
+    let minDist = Infinity, idx = 0;
+    points.forEach((p, i) => {
+      const d = Math.abs(p.x - pos.x);
+      if (d < minDist) { minDist = d; idx = i; }
+    });
+    const pt = points[idx];
+    const tooltip = document.getElementById('chartTooltip');
+    const canvas = document.getElementById('chartCanvas');
+    const wrap = canvas.parentElement;
+    // 값 포맷
+    const valText = unit === '주' ? Math.round(data[idx]).toLocaleString() + '주' : fmtKRW(data[idx]);
+    tooltip.querySelector('.tt-label').textContent = labels[idx];
+    tooltip.querySelector('.tt-value').textContent = valText;
+    // 위치 계산 (canvas 내부 좌표 → wrap 내부 좌표)
+    let tipX = pt.x;
+    let tipY = pt.y;
+    // 좌우 넘침 방지
+    const tw = tooltip.offsetWidth || 80;
+    if (tipX < tw / 2 + 8) tipX = tw / 2 + 8;
+    if (tipX > canvas.clientWidth - tw / 2 - 8) tipX = canvas.clientWidth - tw / 2 - 8;
+    tooltip.style.left = tipX + 'px';
+    tooltip.style.top = tipY + 'px';
+    tooltip.classList.add('show');
+    // 포인트에 하이라이트 그리기 (차트 위에 수직선 + 강조 점)
+    drawHighlight(idx);
+  }
+  function hideInspect() {
+    if (!inspectActive) return;
+    inspectActive = false;
+    const tooltip = document.getElementById('chartTooltip');
+    tooltip.classList.remove('show');
+    if (chartMeta && currentChart !== 3) drawChart(currentChart);
+  }
+  function drawHighlight(idx) {
+    if (!chartMeta) return;
+    const canvas = document.getElementById('chartCanvas');
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const W = canvas.clientWidth, H = canvas.clientHeight;
+    const pt = chartMeta.points[idx];
+    // 수직 점선
+    ctx.save();
+    ctx.scale(dpr, dpr);
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = chartMeta.color + '80';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(pt.x, 30);
+    ctx.lineTo(pt.x, H - 36);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // 강조 원 (큰 원 + 작은 원)
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, 8, 0, Math.PI * 2);
+    ctx.fillStyle = chartMeta.color + '30';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = chartMeta.color;
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+  }
+  // 이벤트 등록 (chart canvas)
+  document.addEventListener('DOMContentLoaded', function() {
+    const canvas = document.getElementById('chartCanvas');
+    canvas.addEventListener('touchstart', showInspect, { passive: false });
+    canvas.addEventListener('touchmove', showInspect, { passive: false });
+    canvas.addEventListener('touchend', hideInspect);
+    canvas.addEventListener('mousemove', showInspect);
+    canvas.addEventListener('mouseleave', hideInspect);
+  });
+})();
 
 // ═══════════════════════════════════════════
 // 커스텀 포트폴리오 편집
@@ -1677,6 +1830,26 @@ function shareResult() {
   }, 'image/png');
 }
 
+// ─── 앱 공유 ───
+async function shareApp() {
+  const url = location.href;
+  const title = '눈덩이 — 배당주 복리 시뮬레이터';
+  const text = '배당주에 투자하면 10~20년 뒤 자산이 얼마나 불어날까? 눈덩이 시뮬레이터로 확인해 보세요!';
+  const statusEl = document.getElementById('shareAppStatus');
+  if (navigator.share) {
+    try { await navigator.share({ title, text, url }); }
+    catch(e) { /* 사용자 취소 */ }
+  } else {
+    try {
+      await navigator.clipboard.writeText(url);
+      if(statusEl){statusEl.textContent='✅ 복사됨';setTimeout(()=>{statusEl.textContent='→'},2000);}
+    } catch(e) {
+      const ta=document.createElement('textarea');ta.value=url;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+      if(statusEl){statusEl.textContent='✅ 복사됨';setTimeout(()=>{statusEl.textContent='→'},2000);}
+    }
+  }
+}
+
 // ─── 포맷 유틸 ───
 function animateResultCards() {
   const duration = 800;
@@ -1725,8 +1898,8 @@ function switchTab(idx) {
   if (idx === 1) { renderPortfolio(); renderSavedPortfolios(); }
   // 히스토리 탭 진입 시 목록 렌더
   if (idx === 2) renderHistory();
-  // 스크롤 맨 위로
-  window.scrollTo(0, 0);
+  // 스크롤 맨 위로 (부드럽게)
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ═══════════════════════════════════════════
@@ -1748,7 +1921,7 @@ function saveToHistory(capital, style, period, finalAsset, monthlyDiv, cumDiv) {
       freq: s.stock.frequency === 'monthly' ? '월' : '분기'
     }));
     const yearly = simResult.records.filter(r => r.month % 12 === 0).map(r => ({
-      year: r.year, asset: r.totalAsset, div: r.mNet, cumDiv: r.cumNet
+      year: r.year, asset: r.totalAsset, div: r.mNet, divGross: r.mGross, cumDiv: r.cumNet
     }));
     const returnRate = ((finalAsset - capital) / capital * 100).toFixed(1);
 
@@ -1818,12 +1991,23 @@ function toggleHistDetail(idx) {
     // 연도별 테이블
     if (h.yearly && h.yearly.length > 0) {
       html += '<div style="font-size:13px;color:var(--text2);margin:12px 0 6px;font-weight:600">연도별 추이</div>';
-      html += '<table class="yearly-table"><thead><tr><th>연차</th><th>월배당</th><th>총자산</th><th>누적배당</th></tr></thead><tbody>';
-      for (const y of h.yearly) {
-        const isLast = y.year === h.period;
-        html += `<tr${isLast?' style="font-weight:700"':''}>
-          <td>${y.year}년</td><td>${fmtKRW(y.div)}</td><td>${fmtKRW(y.asset)}</td><td>${fmtKRW(y.cumDiv)}</td>
-        </tr>`;
+      const hasGross = h.yearly.some(y => y.divGross && y.divGross !== y.div);
+      if (hasGross) {
+        html += '<table class="yearly-table"><thead><tr><th>연차</th><th>월배당(세전)</th><th>월배당(세후)</th><th>총자산</th><th>누적배당</th></tr></thead><tbody>';
+        for (const y of h.yearly) {
+          const isLast = y.year === h.period;
+          html += `<tr${isLast?' style="font-weight:700"':''}>
+            <td>${y.year}년</td><td style="color:var(--text2)">${fmtKRW(y.divGross)}</td><td>${fmtKRW(y.div)}</td><td>${fmtKRW(y.asset)}</td><td>${fmtKRW(y.cumDiv)}</td>
+          </tr>`;
+        }
+      } else {
+        html += '<table class="yearly-table"><thead><tr><th>연차</th><th>월배당</th><th>총자산</th><th>누적배당</th></tr></thead><tbody>';
+        for (const y of h.yearly) {
+          const isLast = y.year === h.period;
+          html += `<tr${isLast?' style="font-weight:700"':''}>
+            <td>${y.year}년</td><td>${fmtKRW(y.div)}</td><td>${fmtKRW(y.asset)}</td><td>${fmtKRW(y.cumDiv)}</td>
+          </tr>`;
+        }
       }
       html += '</tbody></table>';
     }
