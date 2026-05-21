@@ -1,6 +1,6 @@
 {
-  "name": "눈덩이 — 배당주 복리 재투자 시뮬레이터",
-  "short_name": "눈덩이",
+  "name": "Snowball — 배당주 복리 재투자 시뮬레이터",
+  "short_name": "Snowball",
   "description": "내 배당금은 얼마일까?! 귀차니즘을 위한 배당주 복리 재투자 시뮬레이션",
   "start_url": ".",
   "display": "standalone",

@@ -5,16 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="눈덩이">
+<meta name="apple-mobile-web-app-title" content="Snowball">
 <meta name="theme-color" content="#0D0D0D">
-<meta name="description" content="배당주에 투자하면 10~20년 뒤 자산이 얼마나 불어날까? 눈덩이 시뮬레이터로 복리 재투자(DRIP) 효과를 확인해 보세요!">
+<meta name="description" content="배당주에 투자하면 10~20년 뒤 자산이 얼마나 불어날까? Snowball 시뮬레이터로 복리 재투자(DRIP) 효과를 확인해 보세요!">
 <meta property="og:type" content="website">
-<meta property="og:title" content="눈덩이 — 내 배당금은 얼마일까?!">
+<meta property="og:title" content="Snowball — 내 배당금은 얼마일까?!">
 <meta property="og:description" content="배당주에 투자하면 10~20년 뒤 자산이 얼마나 불어날까? 복리 재투자(DRIP) 효과를 시뮬레이션해 보세요.">
 <meta property="og:image" content="icon-512.png">
 <meta property="og:locale" content="ko_KR">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="눈덩이 — 배당주 복리 재투자 시뮬레이터">
+<meta name="twitter:title" content="Snowball — 배당주 복리 재투자 시뮬레이터">
 <meta name="twitter:description" content="배당주 투자 시 복리 재투자 효과를 시뮬레이션해 보세요.">
 <meta name="twitter:image" content="icon-512.png">
 <link rel="manifest" href="manifest.json">
@@ -345,14 +345,14 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold);display
   <button class="ob-skip" onclick="closeOnboarding()">건너뛰기</button>
 </div>
 
-<div class="container" role="main" aria-label="눈덩이 배당 시뮬레이터">
+<div class="container" role="main" aria-label="Snowball 배당 시뮬레이터">
 
   <!-- ═══ 탭 1: 계산 ═══ -->
   <div class="tab-page active" id="tabCalc" role="tabpanel" aria-label="계산">
   <div class="app-logo">
     <div class="app-logo-title">
       <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="20" r="10" stroke="#FFD700" stroke-width="1.8" fill="none" opacity=".5"/><circle cx="16" cy="9" r="6.5" stroke="#FFD700" stroke-width="1.8" fill="none" opacity=".7"/><circle cx="14" cy="7.5" r="1" fill="#FFD700" opacity=".5"/><circle cx="18" cy="8.5" r="1" fill="#FFD700" opacity=".5"/><circle cx="16" cy="11" r="0.8" fill="#FFD700" opacity=".4"/><path d="M9 16 C11 14, 13 13.5, 16 13.5 C19 13.5, 21 14, 23 16" stroke="#FFD700" stroke-width="1" opacity=".3" fill="none"/></svg>
-      <span class="logo-text">눈덩이</span>
+      <span class="logo-text">Snowball</span>
       <span class="sparkle sparkle-1"></span>
       <span class="sparkle sparkle-2"></span>
       <span class="sparkle sparkle-3"></span>
@@ -630,7 +630,7 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold);display
     <div class="section" style="margin-top:16px">
       <div class="section-title">정보</div>
       <div style="font-size:13px;color:var(--text2);line-height:1.8;padding:8px 0">
-        눈덩이 — 배당주 복리 재투자 시뮬레이터<br>
+        Snowball — 배당주 복리 재투자 시뮬레이터<br>
         만든이 : 래해이<br>
         배당소득세 : 15.4% 적용<br>
         데이터 : Yahoo Finance<br><br>
@@ -1787,7 +1787,7 @@ function buildResultCanvas() {
   c.fillStyle = '#FFD700';
   c.font = 'bold 28px -apple-system, sans-serif';
   c.textAlign = 'center';
-  c.fillText('💰 눈덩이 DRIP 시뮬레이터', W/2, 70);
+  c.fillText('💰 Snowball DRIP 시뮬레이터', W/2, 70);
 
   c.fillStyle = '#aaa';
   c.font = '16px -apple-system, sans-serif';
@@ -1911,7 +1911,7 @@ function buildResultCanvas() {
   c.font = '11px -apple-system, sans-serif';
   c.textAlign = 'center';
   const now = new Date();
-  c.fillText(`${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} · 눈덩이 DRIP 시뮬레이터 · 투자 참고용`, W/2, H - 30);
+  c.fillText(`${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} · Snowball DRIP 시뮬레이터 · 투자 참고용`, W/2, H - 30);
 
   return cvs;
 }
@@ -1923,7 +1923,7 @@ function saveResultImage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = '눈덩이_시뮬레이션_결과.png';
+    a.download = 'Snowball_시뮬레이션_결과.png';
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }, 'image/png');
@@ -1933,10 +1933,10 @@ function shareResult() {
   const cvs = buildResultCanvas();
   if (!cvs) return;
   cvs.toBlob(async function(blob) {
-    const file = new File([blob], '눈덩이_결과.png', { type: 'image/png' });
+    const file = new File([blob], 'Snowball_결과.png', { type: 'image/png' });
     const final = simResult.records[simResult.records.length - 1];
     const shareData = {
-      title: '눈덩이 DRIP 시뮬레이션',
+      title: 'Snowball DRIP 시뮬레이션',
       text: `${currentPeriod}년 후 총 자산: ${fmtKRW(final.totalAsset)} | 월 배당: ${fmtKRW(final.mNet)}`,
       files: [file]
     };
@@ -1955,8 +1955,8 @@ function shareResult() {
 // ─── 앱 공유 ───
 async function shareApp() {
   const url = location.href;
-  const title = '눈덩이 — 배당주 복리 시뮬레이터';
-  const text = '배당주에 투자하면 10~20년 뒤 자산이 얼마나 불어날까? 눈덩이 시뮬레이터로 확인해 보세요!';
+  const title = 'Snowball — 배당주 복리 시뮬레이터';
+  const text = '배당주에 투자하면 10~20년 뒤 자산이 얼마나 불어날까? Snowball 시뮬레이터로 확인해 보세요!';
   const statusEl = document.getElementById('shareAppStatus');
   if (navigator.share) {
     try { await navigator.share({ title, text, url }); }
@@ -2218,7 +2218,7 @@ async function fetchAIReply(msg) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        system: '당신은 "눈덩이"라는 배당 재투자(DRIP) 시뮬레이터 앱의 AI 어시스턴트입니다. 배당 투자, ETF, DRIP, 복리 효과에 대해 친절하고 정확하게 한국어로 답변하세요. 답변은 200자 이내로 간결하게 해주세요.',
+        system: '당신은 "Snowball"라는 배당 재투자(DRIP) 시뮬레이터 앱의 AI 어시스턴트입니다. 배당 투자, ETF, DRIP, 복리 효과에 대해 친절하고 정확하게 한국어로 답변하세요. 답변은 200자 이내로 간결하게 해주세요.',
         messages: chatHistory
       }),
       signal: AbortSignal.timeout(8000)
