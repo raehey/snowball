@@ -36,7 +36,18 @@ html{scroll-behavior:smooth}
 }
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased;padding-bottom:env(safe-area-inset-bottom)}
 .container{max-width:500px;margin:0 auto;padding:16px}
-h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
+h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold);display:none}
+.app-logo{text-align:center;padding:22px 0 2px;position:relative}
+.app-logo-title{display:inline-flex;align-items:center;gap:8px;font-size:26px;font-weight:800;color:var(--gold);letter-spacing:-0.5px;position:relative}
+.app-logo-title svg{width:32px;height:32px;filter:drop-shadow(0 0 6px rgba(255,215,0,.35))}
+.app-logo-title .logo-text{background:linear-gradient(135deg,#FFD700 0%,#FFF2A8 50%,#FFD700 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sparkle{position:absolute;width:6px;height:6px;border-radius:50%;background:var(--gold);opacity:0;pointer-events:none}
+.sparkle-1{top:-2px;right:-14px;animation:sparkAnim 2.4s ease-in-out infinite}
+.sparkle-2{top:10px;right:-8px;animation:sparkAnim 2.4s ease-in-out 0.8s infinite;width:4px;height:4px}
+.sparkle-3{bottom:2px;right:-16px;animation:sparkAnim 2.4s ease-in-out 1.6s infinite;width:3px;height:3px}
+@keyframes sparkAnim{0%,100%{opacity:0;transform:scale(0)}40%{opacity:.9;transform:scale(1.2)}60%{opacity:.7;transform:scale(1)}80%{opacity:0;transform:scale(0)}}
+.subtitle-new{text-align:center;color:var(--text2);font-size:13px;margin-bottom:20px;letter-spacing:0.3px;line-height:1.6}
+.subtitle-new .maker{font-size:10.5px;color:var(--text3);letter-spacing:0.5px;text-transform:uppercase}
 .subtitle{text-align:center;color:var(--text2);font-size:13px;margin-bottom:20px}
 
 /* 입력 섹션 */
@@ -46,17 +57,21 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
 .amount-input{width:100%;background:var(--card2);border:2px solid var(--border);border-radius:12px;padding:16px 36px 16px 16px;font-size:24px;color:var(--gold);text-align:right;font-weight:700;font-family:'SF Mono',monospace;outline:none;transition:border-color .2s}
 .amount-input:focus{border-color:var(--gold)}
 .amount-unit{position:absolute;right:16px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:14px;pointer-events:none}
-.quick-amounts{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
-.quick-btn{flex:1;min-width:70px;padding:8px 4px;background:var(--card2);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-size:12px;cursor:pointer;text-align:center;transition:all .2s}
+.quick-amounts{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}
+.quick-btn{padding:10px 4px;background:var(--card2);border:1px solid var(--border);border-radius:10px;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;text-align:center;transition:all .2s}
 .quick-btn:active,.quick-btn:hover{background:var(--gold-dim);border-color:var(--gold);color:var(--gold)}
 
 /* 성향 선택 */
 .style-btns{display:flex;gap:10px}
-.style-btn{flex:1;padding:14px 8px;background:var(--card2);border:2px solid var(--border);border-radius:14px;cursor:pointer;text-align:center;transition:all .2s}
-.style-btn .emoji{font-size:24px;display:block;margin-bottom:4px}
-.style-btn .label{font-size:13px;font-weight:600;color:var(--text2)}
-.style-btn .desc{font-size:10px;color:var(--text3);margin-top:2px}
-.style-btn.active{border-color:var(--gold);background:var(--gold-dim)}
+.style-btn{flex:1;padding:16px 8px;background:linear-gradient(135deg,var(--card2) 0%,var(--card) 100%);border:2px solid var(--border);border-radius:14px;cursor:pointer;text-align:center;transition:all .25s ease}
+.style-btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.2)}
+.style-btn .icon-wrap{width:36px;height:36px;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:var(--card2)}
+.style-btn .icon-wrap svg{width:20px;height:20px;stroke:var(--text2);stroke-width:2;fill:none;transition:stroke .2s}
+.style-btn .label{font-size:13px;font-weight:700;color:var(--text2);letter-spacing:.3px}
+.style-btn .desc{font-size:10px;color:var(--text3);margin-top:3px}
+.style-btn.active{border-color:var(--gold);background:linear-gradient(135deg,var(--gold-dim) 0%,rgba(255,215,0,.08) 100%);box-shadow:0 0 12px rgba(255,215,0,.15)}
+.style-btn.active .icon-wrap{background:var(--gold-dim)}
+.style-btn.active .icon-wrap svg{stroke:var(--gold)}
 .style-btn.active .label{color:var(--gold)}
 .style-btn.s-con.active{border-color:var(--blue)}
 .style-btn.s-con.active .label{color:var(--blue)}
@@ -66,15 +81,24 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
 /* 시뮬레이션 버튼 */
 .sim-btn{width:100%;padding:16px;background:var(--gold);border:none;border-radius:14px;font-size:17px;font-weight:700;color:#000;cursor:pointer;margin-bottom:16px;transition:opacity .2s}
 .sim-btn:active{opacity:.8}
+.sim-btn.loading{pointer-events:none;opacity:.7;position:relative;color:transparent}
+.sim-btn.loading::after{content:'';position:absolute;left:50%;top:50%;width:24px;height:24px;margin:-12px 0 0 -12px;border:3px solid rgba(0,0,0,.2);border-top-color:#000;border-radius:50%;animation:btnSpin .6s linear infinite}
+@keyframes btnSpin{to{transform:rotate(360deg)}}
 
 /* 결과 카드 */
 .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
-.result-card{background:var(--card);border-radius:14px;padding:16px}
-.result-card .rc-label{font-size:11px;color:var(--text2)}
-.result-card .rc-value{font-size:22px;font-weight:700;margin-top:4px;font-family:'SF Mono',monospace}
-.result-card .rc-sub{font-size:11px;color:var(--green);margin-top:2px}
-.result-card.highlight{border:1px solid var(--gold)}
-.result-card.highlight .rc-value{color:var(--gold)}
+.result-card{background:linear-gradient(145deg,var(--card) 0%,rgba(255,255,255,.03) 50%,var(--card) 100%);border-radius:16px;padding:18px 16px;border:1px solid rgba(255,255,255,.06);position:relative;overflow:hidden}
+.result-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent)}
+.result-card .rc-label{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;font-weight:500}
+.result-card .rc-value{font-size:24px;font-weight:800;margin-top:6px;font-family:'SF Mono',monospace;line-height:1.1}
+.result-card .rc-sub{font-size:11px;color:var(--green);margin-top:4px;font-weight:500}
+.result-card.highlight{border:1px solid rgba(255,215,0,.3);box-shadow:0 0 20px rgba(255,215,0,.08),inset 0 1px 0 rgba(255,215,0,.1);background:linear-gradient(145deg,rgba(255,215,0,.06) 0%,var(--card) 40%,var(--card) 100%)}
+.result-card.highlight .rc-value{color:var(--gold);text-shadow:0 0 12px rgba(255,215,0,.2)}
+.result-grid-divider{grid-column:1/-1;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);margin:2px 0}
+[data-theme="light"] .result-card{background:linear-gradient(145deg,var(--card) 0%,rgba(0,0,0,.01) 50%,var(--card) 100%);border-color:rgba(0,0,0,.06)}
+[data-theme="light"] .result-card::before{background:linear-gradient(90deg,transparent,rgba(0,0,0,.04),transparent)}
+[data-theme="light"] .result-card.highlight{border-color:rgba(153,109,0,.25);box-shadow:0 0 20px rgba(153,109,0,.06),inset 0 1px 0 rgba(153,109,0,.08);background:linear-gradient(145deg,rgba(153,109,0,.04) 0%,var(--card) 40%,var(--card) 100%)}
+[data-theme="light"] .result-grid-divider{background:linear-gradient(90deg,transparent,rgba(0,0,0,.06),transparent)}
 
 /* 종목 카드 */
 .stock-card{background:var(--card);border-radius:14px;padding:16px;margin-bottom:10px}
@@ -216,6 +240,20 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
 .pf-card{background:var(--card);border-radius:14px;padding:16px;margin-bottom:12px}
 .pf-card-title{font-size:15px;font-weight:600;margin-bottom:8px}
 .pf-empty{text-align:center;padding:60px 20px;color:var(--text3)}
+.pf-holding{background:var(--card);border-radius:14px;padding:14px 16px;margin-bottom:10px;border:1px solid var(--border);position:relative;transition:border-color .2s}
+.pf-holding:hover{border-color:var(--gold-dim)}
+.pf-holding-header{display:flex;justify-content:space-between;align-items:center}
+.pf-ticker{font-weight:700;color:var(--gold);font-size:15px}
+.pf-meta{color:var(--text3);font-size:11px;margin-left:6px}
+.pf-holding-body{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px}
+.pf-shares-input{width:64px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:6px 8px;color:var(--text);text-align:center;font-size:13px;outline:none;transition:border-color .2s}
+.pf-shares-input:focus{border-color:var(--gold)}
+.pf-value{font-size:14px;font-weight:600;color:var(--text)}
+.pf-div-est{font-size:11px;color:var(--green);margin-top:4px;text-align:right}
+.pf-summary{background:linear-gradient(145deg,var(--card) 60%,rgba(255,215,0,.04) 100%);border:1px solid var(--gold-dim);border-radius:14px;padding:16px;margin-top:12px}
+.pf-summary-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0}
+.pf-summary-label{font-size:13px;color:var(--text2)}
+.pf-summary-value{font-size:15px;font-weight:700;color:var(--gold)}
 
 /* 히스토리 탭 */
 .hist-item{background:var(--card);border-radius:14px;padding:14px;margin-bottom:10px;border:1px solid transparent;position:relative}
@@ -249,6 +287,9 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
 .theme-switch::after{content:'🌙';position:absolute;left:2px;top:2px;width:24px;height:24px;background:var(--card);border-radius:12px;transition:transform .3s;display:flex;align-items:center;justify-content:center;font-size:14px}
 [data-theme="light"] .theme-switch{background:var(--gold)}
 [data-theme="light"] .theme-switch::after{content:'☀️';transform:translateX(22px)}
+[data-theme="light"] .app-logo-title svg{filter:drop-shadow(0 0 4px rgba(153,109,0,.2))}
+[data-theme="light"] .app-logo-title .logo-text{background:linear-gradient(135deg,#996D00 0%,#C49B00 50%,#996D00 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+[data-theme="light"] .sparkle{background:var(--gold)}
 
 .hidden{display:none}
 
@@ -262,22 +303,69 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
 /* 탭 페이지 전환 */
 .tab-page.active{display:block;animation:tabFadeIn .25s ease-out}
 @keyframes tabFadeIn{from{opacity:0}to{opacity:1}}
+
+/* 온보딩 오버레이 */
+.onboarding-overlay{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;transition:opacity .4s ease}
+.onboarding-overlay.fade-out{opacity:0;pointer-events:none}
+.onboarding-step{display:none;text-align:center;max-width:340px;animation:obSlideIn .45s ease-out both}
+.onboarding-step.active{display:block}
+@keyframes obSlideIn{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.ob-icon{font-size:56px;margin-bottom:20px;display:block}
+.ob-title{font-size:22px;font-weight:800;color:var(--gold);margin-bottom:12px;line-height:1.3}
+.ob-desc{font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:32px}
+.ob-dots{display:flex;gap:8px;justify-content:center;margin-bottom:28px}
+.ob-dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:all .3s}
+.ob-dot.active{background:var(--gold);width:24px;border-radius:4px}
+.ob-next{padding:14px 48px;background:var(--gold);border:none;border-radius:12px;font-size:16px;font-weight:700;color:#000;cursor:pointer;transition:transform .15s,opacity .15s}
+.ob-next:active{transform:scale(.96);opacity:.8}
+.ob-skip{margin-top:16px;background:none;border:none;color:var(--text3);font-size:13px;cursor:pointer}
 </style>
 </head>
 <body>
 
-<div class="container">
+<!-- 온보딩 오버레이 -->
+<div class="onboarding-overlay" id="onboarding" style="display:none" aria-label="앱 소개">
+  <div class="onboarding-step active" id="obStep0">
+    <span class="ob-icon" aria-hidden="true">⛄</span>
+    <div class="ob-title">돈만 넣으면 끝</div>
+    <div class="ob-desc">투자 금액과 기간만 입력하면<br>배당 재투자 시뮬레이션이<br>자동으로 완성됩니다.</div>
+  </div>
+  <div class="onboarding-step" id="obStep1">
+    <span class="ob-icon" aria-hidden="true">🎯</span>
+    <div class="ob-title">투자 성향을 골라보세요</div>
+    <div class="ob-desc"><b style="color:var(--blue)">안정형</b> — 꾸준한 배당, 낮은 변동<br><b style="color:var(--gold)">균형형</b> — 배당 + 성장의 밸런스<br><b style="color:var(--red)">공격형</b> — 높은 성장, 높은 배당</div>
+  </div>
+  <div class="onboarding-step" id="obStep2">
+    <span class="ob-icon" aria-hidden="true">🔄</span>
+    <div class="ob-title">복리의 마법, DRIP</div>
+    <div class="ob-desc">받은 배당금으로 주식을 더 사면<br>배당이 배당을 낳는 눈덩이 효과!<br>시간이 지날수록 차이가 극명해집니다.</div>
+  </div>
+  <div class="ob-dots"><span class="ob-dot active"></span><span class="ob-dot"></span><span class="ob-dot"></span></div>
+  <button class="ob-next" id="obNextBtn" onclick="nextOnboardingStep()">다음</button>
+  <button class="ob-skip" onclick="closeOnboarding()">건너뛰기</button>
+</div>
+
+<div class="container" role="main" aria-label="눈덩이 배당 시뮬레이터">
 
   <!-- ═══ 탭 1: 계산 ═══ -->
-  <div class="tab-page active" id="tabCalc">
+  <div class="tab-page active" id="tabCalc" role="tabpanel" aria-label="계산">
+  <div class="app-logo">
+    <div class="app-logo-title">
+      <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="20" r="10" stroke="#FFD700" stroke-width="1.8" fill="none" opacity=".5"/><circle cx="16" cy="9" r="6.5" stroke="#FFD700" stroke-width="1.8" fill="none" opacity=".7"/><circle cx="14" cy="7.5" r="1" fill="#FFD700" opacity=".5"/><circle cx="18" cy="8.5" r="1" fill="#FFD700" opacity=".5"/><circle cx="16" cy="11" r="0.8" fill="#FFD700" opacity=".4"/><path d="M9 16 C11 14, 13 13.5, 16 13.5 C19 13.5, 21 14, 23 16" stroke="#FFD700" stroke-width="1" opacity=".3" fill="none"/></svg>
+      <span class="logo-text">눈덩이</span>
+      <span class="sparkle sparkle-1"></span>
+      <span class="sparkle sparkle-2"></span>
+      <span class="sparkle sparkle-3"></span>
+    </div>
+  </div>
   <h1>💰 내 배당금은 얼마일까?!</h1>
-  <p class="subtitle">귀차니즘을 위한 배당주 복리 재투자 시뮬레이션<br><span style="font-size:11px;color:var(--text3)">만든이 : 래해이</span></p>
+  <p class="subtitle-new">귀차니즘을 위한 배당주 복리 재투자 시뮬레이션<br><span class="maker">만든이 : 래해이</span></p>
 
   <!-- 투자금액 입력 -->
   <div class="section">
     <div class="section-title">투자 금액</div>
     <div class="amount-input-wrap">
-      <input type="text" id="amountInput" class="amount-input" value="50,000,000" inputmode="numeric">
+      <input type="text" id="amountInput" class="amount-input" value="50,000,000" inputmode="numeric" aria-label="투자 금액 입력">
       <span class="amount-unit" id="amountUnit">원</span>
     </div>
     <div class="currency-row">
@@ -287,30 +375,30 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
       <div class="currency-converted" id="currencyConverted">≈ $36,496</div>
     </div>
     <div class="quick-amounts">
-      <div class="quick-btn" onclick="setAmount(10000000)">1천만</div>
-      <div class="quick-btn" onclick="setAmount(30000000)">3천만</div>
-      <div class="quick-btn" onclick="setAmount(50000000)">5천만</div>
-      <div class="quick-btn" onclick="setAmount(100000000)">1억</div>
-      <div class="quick-btn" onclick="setAmount(300000000)">3억</div>
+      <div class="quick-btn" role="button" aria-label="1천만원으로 설정" onclick="setAmount(10000000)">1천만</div>
+      <div class="quick-btn" role="button" aria-label="3천만원으로 설정" onclick="setAmount(30000000)">3천만</div>
+      <div class="quick-btn" role="button" aria-label="5천만원으로 설정" onclick="setAmount(50000000)">5천만</div>
+      <div class="quick-btn" role="button" aria-label="1억원으로 설정" onclick="setAmount(100000000)">1억</div>
+      <div class="quick-btn" role="button" aria-label="3억원으로 설정" onclick="setAmount(300000000)">3억</div>
     </div>
   </div>
 
   <!-- 투자 성향 -->
   <div class="section">
     <div class="section-title">투자 성향</div>
-    <div class="style-btns">
-      <div class="style-btn s-con" onclick="selectStyle('conservative')" id="btn-conservative">
-        <span class="emoji">🛡</span>
+    <div class="style-btns" role="radiogroup" aria-label="투자 성향 선택">
+      <div class="style-btn s-con" role="radio" aria-checked="false" aria-label="안정형 - 원금 보존" onclick="selectStyle('conservative')" id="btn-conservative">
+        <div class="icon-wrap" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z"/></svg></div>
         <div class="label">안정형</div>
         <div class="desc">원금 보존</div>
       </div>
-      <div class="style-btn active" onclick="selectStyle('balanced')" id="btn-balanced">
-        <span class="emoji">⚖️</span>
+      <div class="style-btn active" role="radio" aria-checked="true" aria-label="균형형 - 배당+성장" onclick="selectStyle('balanced')" id="btn-balanced">
+        <div class="icon-wrap" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3v18M3 12h18M7 7l-4 5 4 5M17 7l4 5-4 5"/></svg></div>
         <div class="label">균형형</div>
         <div class="desc">배당+성장</div>
       </div>
-      <div class="style-btn s-agg" onclick="selectStyle('aggressive')" id="btn-aggressive">
-        <span class="emoji">🚀</span>
+      <div class="style-btn s-agg" role="radio" aria-checked="false" aria-label="공격형 - 고배당" onclick="selectStyle('aggressive')" id="btn-aggressive">
+        <div class="icon-wrap" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L8 8h3v6H8l4 6 4-6h-3V8h3L12 2z"/></svg></div>
         <div class="label">공격형</div>
         <div class="desc">고배당</div>
       </div>
@@ -320,18 +408,18 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
   <!-- 시뮬레이션 기간 -->
   <div class="section">
     <div class="section-title">시뮬레이션 기간</div>
-    <div class="period-btns">
-      <div class="period-btn" onclick="setPeriod(5)">5년</div>
-      <div class="period-btn active" onclick="setPeriod(10)" id="period-10">10년</div>
-      <div class="period-btn" onclick="setPeriod(15)">15년</div>
-      <div class="period-btn" onclick="setPeriod(20)">20년</div>
-      <div class="period-btn period-custom" onclick="focusCustomPeriod()"><input type="text" id="customPeriod" class="period-custom-input" placeholder="직접" inputmode="numeric" maxlength="2" onchange="setCustomPeriod()"><span class="period-custom-unit">년</span></div>
+    <div class="period-btns" role="radiogroup" aria-label="시뮬레이션 기간 선택">
+      <div class="period-btn" role="radio" aria-checked="false" onclick="setPeriod(5)">5년</div>
+      <div class="period-btn active" role="radio" aria-checked="true" onclick="setPeriod(10)" id="period-10">10년</div>
+      <div class="period-btn" role="radio" aria-checked="false" onclick="setPeriod(15)">15년</div>
+      <div class="period-btn" role="radio" aria-checked="false" onclick="setPeriod(20)">20년</div>
+      <div class="period-btn period-custom" role="radio" aria-checked="false" onclick="focusCustomPeriod()"><input type="text" id="customPeriod" class="period-custom-input" placeholder="직접" inputmode="numeric" maxlength="2" aria-label="기간 직접 입력 (년)" onchange="setCustomPeriod()"><span class="period-custom-unit">년</span></div>
     </div>
   </div>
 
   <!-- 고급 옵션 -->
   <div class="section">
-    <div class="adv-toggle" onclick="toggleAdvanced()" id="advToggle">
+    <div class="adv-toggle" onclick="toggleAdvanced()" id="advToggle" role="button" aria-expanded="false" aria-controls="advBody">
       <span>⚙️ 고급 옵션</span>
       <span class="chevron">▼</span>
     </div>
@@ -363,17 +451,17 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
   <button class="sim-btn" onclick="runSimulation()">시뮬레이션 시작 🔥</button>
 
   <!-- 결과 영역 -->
-  <div id="results" class="hidden">
+  <div id="results" class="hidden" aria-live="polite">
     <!-- 핵심 숫자 -->
     <div class="result-grid" id="resultCards"></div>
 
     <!-- 저장/공유 버튼 -->
     <div class="save-share-bar">
-      <button class="save-share-btn" onclick="saveResultImage()">
-        <span class="btn-icon">📸</span>결과 저장
+      <button class="save-share-btn" onclick="saveResultImage()" aria-label="시뮬레이션 결과 이미지 저장">
+        <span class="btn-icon" aria-hidden="true">📸</span>결과 저장
       </button>
-      <button class="save-share-btn" onclick="shareResult()">
-        <span class="btn-icon">📤</span>공유하기
+      <button class="save-share-btn" onclick="shareResult()" aria-label="시뮬레이션 결과 공유">
+        <span class="btn-icon" aria-hidden="true">📤</span>공유하기
       </button>
     </div>
 
@@ -409,14 +497,14 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
 
     <!-- 차트 -->
     <div class="section">
-      <div class="chart-tabs" id="chartTabs">
-        <div class="chart-tab active" onclick="switchChart(0)">자산 성장</div>
-        <div class="chart-tab" onclick="switchChart(1)">월 배당금</div>
-        <div class="chart-tab" onclick="switchChart(2)">주식 수</div>
-        <div class="chart-tab" onclick="switchChart(3)">포트폴리오</div>
+      <div class="chart-tabs" id="chartTabs" role="tablist" aria-label="차트 유형 선택">
+        <div class="chart-tab active" role="tab" aria-selected="true" onclick="switchChart(0)">자산 성장</div>
+        <div class="chart-tab" role="tab" aria-selected="false" onclick="switchChart(1)">월 배당금</div>
+        <div class="chart-tab" role="tab" aria-selected="false" onclick="switchChart(2)">주식 수</div>
+        <div class="chart-tab" role="tab" aria-selected="false" onclick="switchChart(3)">포트폴리오</div>
       </div>
       <div class="chart-wrap">
-        <canvas id="chartCanvas" class="chart-canvas"></canvas>
+        <canvas id="chartCanvas" class="chart-canvas" role="img" aria-label="시뮬레이션 결과 차트"></canvas>
         <div class="chart-tooltip" id="chartTooltip"><div class="tt-label"></div><div class="tt-value"></div></div>
       </div>
     </div>
@@ -424,7 +512,7 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
     <!-- 연도별 테이블 -->
     <div class="section">
       <div class="section-title">📊 연도별 요약</div>
-      <table class="yearly-table" id="yearlyTable"></table>
+      <table class="yearly-table" id="yearlyTable" aria-label="연도별 시뮬레이션 요약"></table>
     </div>
   </div>
 
@@ -440,7 +528,7 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
   </div><!-- /탭1 계산 -->
 
   <!-- ═══ 탭 2: 내 주식 포트폴리오 ═══ -->
-  <div class="tab-page" id="tabPortfolio">
+  <div class="tab-page" id="tabPortfolio" role="tabpanel" aria-label="포트폴리오">
     <h1 style="font-size:18px;color:var(--gold);padding:20px 0 10px">📊 내 포트폴리오</h1>
     <p class="subtitle" style="margin-bottom:16px">현재 보유 중인 주식을 설정하세요</p>
 
@@ -480,7 +568,7 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
   </div>
 
   <!-- ═══ 탭 3: 히스토리 ═══ -->
-  <div class="tab-page" id="tabHistory">
+  <div class="tab-page" id="tabHistory" role="tabpanel" aria-label="시뮬레이션 내역">
     <h1 style="font-size:18px;color:var(--gold);padding:20px 0 10px">📜 시뮬레이션 내역</h1>
     <p class="subtitle" style="margin-bottom:16px">최근 시뮬레이션 결과를 확인하세요</p>
     <div id="historyList">
@@ -493,30 +581,30 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
   </div>
 
   <!-- ═══ 탭 4: AI 채팅 ═══ -->
-  <div class="tab-page" id="tabChat">
+  <div class="tab-page" id="tabChat" role="tabpanel" aria-label="AI 채팅">
     <h1 style="font-size:18px;color:var(--gold);padding:20px 0 10px">🤖 AI 배당 도우미</h1>
     <div class="chat-container">
       <div class="chat-messages" id="chatMessages">
         <div class="chat-bubble ai">안녕하세요! 배당 투자에 관해 궁금한 점을 물어보세요. 예를 들어:<br><br>• "SCHD vs JEPQ 뭐가 나아?"<br>• "월 100만원 배당 받으려면?"<br>• "배당 성장률이 뭐야?"<br>• "초보한테 추천하는 ETF는?"</div>
       </div>
       <div class="chat-input-wrap">
-        <input type="text" class="chat-input" id="chatInput" placeholder="배당 관련 질문을 입력하세요..." onkeydown="if(event.key==='Enter')sendChat()">
-        <button class="chat-send" onclick="sendChat()">전송</button>
+        <input type="text" class="chat-input" id="chatInput" placeholder="배당 관련 질문을 입력하세요..." aria-label="AI에게 질문 입력" onkeydown="if(event.key==='Enter')sendChat()">
+        <button class="chat-send" onclick="sendChat()" aria-label="질문 전송">전송</button>
       </div>
     </div>
   </div>
 
   <!-- ═══ 탭 5: 설정 ═══ -->
-  <div class="tab-page" id="tabSettings">
+  <div class="tab-page" id="tabSettings" role="tabpanel" aria-label="설정">
     <h1 style="font-size:18px;color:var(--gold);padding:20px 0 10px">⚙️ 설정</h1>
     <div class="section">
       <div class="setting-item">
         <span class="setting-label">테마</span>
-        <button class="theme-switch" id="themeToggle" onclick="toggleTheme()"></button>
+        <button class="theme-switch" id="themeToggle" onclick="toggleTheme()" aria-label="다크/라이트 테마 전환"></button>
       </div>
       <div class="setting-item">
         <span class="setting-label">앱 버전</span>
-        <span class="setting-value">1.0.0</span>
+        <span class="setting-value">1.1.0</span>
       </div>
       <div class="setting-item">
         <span class="setting-label">현재 환율</span>
@@ -554,13 +642,13 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold)}
 </div><!-- /container -->
 
 <!-- ═══ 하단 탭바 ═══ -->
-<div class="tab-bar">
-  <div class="tab-item active" onclick="switchTab(0)"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg></div>
-  <div class="tab-item" onclick="switchTab(1)"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg></div>
-  <div class="tab-item" onclick="switchTab(2)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-  <div class="tab-item" onclick="switchTab(3)"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
-  <div class="tab-item" onclick="switchTab(4)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></div>
-</div>
+<nav class="tab-bar" role="tablist" aria-label="메인 탭">
+  <div class="tab-item active" role="tab" aria-label="계산" aria-selected="true" tabindex="0" onclick="switchTab(0)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg></div>
+  <div class="tab-item" role="tab" aria-label="포트폴리오" aria-selected="false" tabindex="-1" onclick="switchTab(1)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg></div>
+  <div class="tab-item" role="tab" aria-label="시뮬레이션 내역" aria-selected="false" tabindex="-1" onclick="switchTab(2)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+  <div class="tab-item" role="tab" aria-label="AI 채팅" aria-selected="false" tabindex="-1" onclick="switchTab(3)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+  <div class="tab-item" role="tab" aria-label="설정" aria-selected="false" tabindex="-1" onclick="switchTab(4)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></div>
+</nav>
 
 <script>
 // roundRect 폴리필 (구형 브라우저 지원)
@@ -836,6 +924,31 @@ function restoreTheme() {
 }
 restoreTheme();
 
+// ─── 온보딩 ───
+let obStep = 0;
+function showOnboarding() {
+  if (localStorage.getItem('snowball_onboarded')) return;
+  document.getElementById('onboarding').style.display = '';
+}
+function nextOnboardingStep() {
+  obStep++;
+  if (obStep > 2) { closeOnboarding(); return; }
+  document.querySelectorAll('.onboarding-step').forEach(function(el, i) {
+    el.classList.toggle('active', i === obStep);
+  });
+  document.querySelectorAll('.ob-dot').forEach(function(d, i) {
+    d.classList.toggle('active', i === obStep);
+  });
+  if (obStep === 2) document.getElementById('obNextBtn').textContent = '시작하기';
+}
+function closeOnboarding() {
+  localStorage.setItem('snowball_onboarded', '1');
+  var overlay = document.getElementById('onboarding');
+  overlay.classList.add('fade-out');
+  setTimeout(function() { overlay.style.display = 'none'; }, 400);
+}
+showOnboarding();
+
 // ─── 설정 저장/복원 (localStorage) ───
 function saveSettings() {
   try {
@@ -934,15 +1047,17 @@ function updateConvertedCurrency() {
 // ─── 성향 선택 ───
 function selectStyle(s) {
   currentStyle = s;
-  document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('btn-' + s).classList.add('active');
+  document.querySelectorAll('.style-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-checked','false'); });
+  const el = document.getElementById('btn-' + s);
+  el.classList.add('active'); el.setAttribute('aria-checked','true');
 }
 
 // ─── 기간 선택 ───
 function setPeriod(y) {
   currentPeriod = y;
-  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
-  event.target.closest('.period-btn').classList.add('active');
+  document.querySelectorAll('.period-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-checked','false'); });
+  const el = event.target.closest('.period-btn');
+  el.classList.add('active'); el.setAttribute('aria-checked','true');
   document.getElementById('customPeriod').value = '';
 }
 function focusCustomPeriod() {
@@ -961,6 +1076,7 @@ function toggleAdvanced() {
   const b = document.getElementById('advBody');
   t.classList.toggle('open');
   b.classList.toggle('open');
+  t.setAttribute('aria-expanded', b.classList.contains('open') ? 'true' : 'false');
 }
 
 // ═══════════════════════════════════════════
@@ -970,7 +1086,11 @@ function runSimulation() {
   const capital = getAmount();
   if (capital < 100000) { alert('최소 10만원 이상 입력해주세요.'); return; }
   saveSettings();
-
+  const btn = document.querySelector('.sim-btn[onclick="runSimulation()"]');
+  if (btn) btn.classList.add('loading');
+  setTimeout(() => { _doSimulation(capital, btn); }, 400);
+}
+function _doSimulation(capital, btn) {
   const applyTax = document.getElementById('taxToggle').checked;
   const opts = {
     divGrowth: parseFloat(document.getElementById('divGrowth').value) / 100 || 0,
@@ -1000,6 +1120,7 @@ function runSimulation() {
       <div class="rc-value" data-countup="${final.mNet}">0원</div>
       <div class="rc-sub">세전 ${fmtKRW(final.mGross)}</div>
     </div>
+    <div class="result-grid-divider"></div>
     <div class="result-card">
       <div class="rc-label">누적 배당금</div>
       <div class="rc-value" data-countup="${final.cumNet}">0원</div>
@@ -1093,6 +1214,7 @@ function runSimulation() {
   // 차트는 DOM이 보인 후 그려야 canvas 사이즈가 잡힘
   setTimeout(() => { drawChart(currentChart); }, 50);
   resEl.scrollIntoView({ behavior: 'smooth' });
+  if (btn) btn.classList.remove('loading');
 }
 
 // ═══════════════════════════════════════════
@@ -1100,7 +1222,7 @@ function runSimulation() {
 // ═══════════════════════════════════════════
 function switchChart(idx) {
   currentChart = idx;
-  document.querySelectorAll('.chart-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+  document.querySelectorAll('.chart-tab').forEach((t, i) => { t.classList.toggle('active', i === idx); t.setAttribute('aria-selected', i === idx ? 'true' : 'false'); });
   drawChart(idx);
 }
 
@@ -1886,6 +2008,8 @@ function switchTab(idx) {
   });
   document.querySelectorAll('.tab-item').forEach((el, i) => {
     el.classList.toggle('active', i === idx);
+    el.setAttribute('aria-selected', i === idx ? 'true' : 'false');
+    el.setAttribute('tabindex', i === idx ? '0' : '-1');
   });
   // 설정 탭 진입 시 정보 업데이트
   if (idx === 4) {
@@ -2058,6 +2182,10 @@ const AI_ANSWERS = {
   'vs': 'ETF 비교는 이렇게 보면 돼요:\n\n📊 배당률 순위:\nQYLD (12%) > XYLD (10%) > JEPQ (9.5%) > JEPI (7.2%) > DIVO (4.8%) > SCHD (3.5%)\n\n📈 성장성 순위:\nSCHD > DGRO > VIG > VYM > JEPQ > JEPI\n\n배당률↑ = 성장성↓ 트레이드오프!'
 };
 
+// AI 프록시 URL (로컬 개발: http://localhost:8787, 배포 시 Workers URL로 변경)
+var AI_API_URL = 'http://localhost:8787';
+var chatHistory = [];
+
 function sendChat() {
   const input = document.getElementById('chatInput');
   const msg = input.value.trim();
@@ -2066,21 +2194,55 @@ function sendChat() {
 
   const messagesEl = document.getElementById('chatMessages');
   messagesEl.innerHTML += `<div class="chat-bubble user">${msg}</div>`;
+  messagesEl.scrollTop = messagesEl.scrollHeight;
 
-  // 키워드 매칭
-  const lower = msg.toLowerCase();
-  let reply = '';
-  for (const [key, answer] of Object.entries(AI_ANSWERS)) {
-    if (lower.includes(key)) { reply = answer; break; }
-  }
-  if (!reply) {
-    reply = '좋은 질문이에요! 하지만 제가 답변할 수 있는 범위가 아직 제한적이에요.\n\n아래 주제로 질문해 보세요:\n• ETF 추천 / 비교\n• SCHD, JEPQ, JEPI 정보\n• 배당성장률이란?\n• 세금 얼마?\n• 월 100만원 배당 받으려면?\n• DRIP이 뭐야?';
-  }
+  // Claude API 시도 → 실패 시 키워드 매칭 폴백
+  chatHistory.push({ role: 'user', content: msg });
+  if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
 
-  setTimeout(() => {
-    messagesEl.innerHTML += `<div class="chat-bubble ai">${reply.replace(/\n/g,'<br>')}</div>`;
+  // 타이핑 인디케이터
+  const typingId = 'typing-' + Date.now();
+  messagesEl.innerHTML += `<div class="chat-bubble ai" id="${typingId}" style="opacity:.6">생각 중...</div>`;
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+
+  fetchAIReply(msg).then(reply => {
+    const el = document.getElementById(typingId);
+    if (el) { el.style.opacity = '1'; el.innerHTML = reply.replace(/\n/g,'<br>'); }
     messagesEl.scrollTop = messagesEl.scrollHeight;
-  }, 300);
+  });
+}
+
+async function fetchAIReply(msg) {
+  try {
+    const resp = await fetch(AI_API_URL + '/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system: '당신은 "눈덩이"라는 배당 재투자(DRIP) 시뮬레이터 앱의 AI 어시스턴트입니다. 배당 투자, ETF, DRIP, 복리 효과에 대해 친절하고 정확하게 한국어로 답변하세요. 답변은 200자 이내로 간결하게 해주세요.',
+        messages: chatHistory
+      }),
+      signal: AbortSignal.timeout(8000)
+    });
+    if (!resp.ok) throw new Error('API error');
+    const data = await resp.json();
+    if (data.reply) {
+      chatHistory.push({ role: 'assistant', content: data.reply });
+      return data.reply;
+    }
+    throw new Error('empty reply');
+  } catch(e) {
+    // 폴백: 기존 키워드 매칭
+    chatHistory.pop(); // remove last user msg from history (API failed)
+    return getKeywordReply(msg);
+  }
+}
+
+function getKeywordReply(msg) {
+  const lower = msg.toLowerCase();
+  for (const [key, answer] of Object.entries(AI_ANSWERS)) {
+    if (lower.includes(key)) return answer;
+  }
+  return '좋은 질문이에요! 하지만 제가 답변할 수 있는 범위가 아직 제한적이에요.\n\n아래 주제로 질문해 보세요:\n• ETF 추천 / 비교\n• SCHD, JEPQ, JEPI 정보\n• 배당성장률이란?\n• 세금 얼마?\n• 월 100만원 배당 받으려면?\n• DRIP이 뭐야?';
 }
 
 // ═══════════════════════════════════════════
@@ -2101,30 +2263,37 @@ function renderPortfolio() {
   if (myHoldings.length === 0) {
     el.innerHTML = '<div class="pf-empty" style="padding:30px 10px"><div>종목을 추가해주세요</div></div>';
   } else {
+    let totalValue = 0, totalMonthlyDiv = 0;
     el.innerHTML = myHoldings.map((h, i) => {
       const s = STOCKS[h.ticker];
       const usd = s ? (s.price / EXCHANGE_RATE).toFixed(2) : '?';
       const yld = s ? (s.dividendYield * 100).toFixed(1) + '%' : '?';
       const freq = s ? (s.frequency === 'monthly' ? '월배당' : '분기배당') : '';
-      const value = s ? fmtKRW(h.shares * s.price) : '-';
-      return `<div class="hist-item" style="padding-right:40px">
-        <button class="hist-delete" onclick="removeHolding(${i})">✕</button>
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div><strong style="color:var(--gold)">${h.ticker}</strong> <span style="color:var(--text3);font-size:12px">${s?.nameKo||''} · ${freq} · ${yld}</span></div>
+      const value = s ? h.shares * s.price : 0;
+      const monthlyDiv = s ? (h.shares * s.price * s.dividendYield / 12) : 0;
+      totalValue += value;
+      totalMonthlyDiv += monthlyDiv;
+      return `<div class="pf-holding">
+        <button class="hist-delete" onclick="removeHolding(${i})" aria-label="${h.ticker} 삭제">✕</button>
+        <div class="pf-holding-header" style="padding-right:28px">
+          <div><span class="pf-ticker">${h.ticker}</span><span class="pf-meta">${s?.nameKo||''} · ${freq} · ${yld}</span></div>
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
-          <div style="font-size:13px">$${usd} × <input type="number" value="${h.shares}" min="0" style="width:60px;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:4px 6px;color:var(--text);text-align:center;font-size:13px;outline:none" onchange="updateHoldingShares(${i},this.value)">주</div>
-          <div style="font-size:14px;font-weight:600;color:var(--text)">${value}</div>
+        <div class="pf-holding-body">
+          <div style="font-size:13px;color:var(--text2)">$${usd} × <input type="number" value="${h.shares}" min="0" class="pf-shares-input" onchange="updateHoldingShares(${i},this.value)">주</div>
+          <div>
+            <div class="pf-value">${value > 0 ? fmtKRW(value) : '-'}</div>
+            ${monthlyDiv > 0 ? `<div class="pf-div-est">월 ~${fmtKRW(monthlyDiv)}</div>` : ''}
+          </div>
         </div>
       </div>`;
     }).join('');
 
-    // 총 평가액
-    const total = myHoldings.reduce((sum, h) => {
-      const s = STOCKS[h.ticker];
-      return sum + (s ? h.shares * s.price : 0);
-    }, 0);
-    el.innerHTML += `<div style="text-align:right;padding:10px 0;font-size:15px;color:var(--gold);font-weight:700">총 평가: ${fmtKRW(total)}</div>`;
+    // 총 평가액 + 월 예상 배당 요약
+    el.innerHTML += `<div class="pf-summary">
+      <div class="pf-summary-row"><span class="pf-summary-label">총 평가액</span><span class="pf-summary-value">${fmtKRW(totalValue)}</span></div>
+      <div class="pf-summary-row"><span class="pf-summary-label">월 예상 배당</span><span class="pf-summary-value" style="color:var(--green)">~${fmtKRW(totalMonthlyDiv)}</span></div>
+      <div class="pf-summary-row"><span class="pf-summary-label">연 예상 배당</span><span class="pf-summary-value" style="color:var(--green)">~${fmtKRW(totalMonthlyDiv*12)}</span></div>
+    </div>`;
   }
 
   // 추가 버튼 렌더링
@@ -2294,6 +2463,13 @@ function fmtKRW(v) {
   if (v >= 100000000) return (v / 100000000).toFixed(2) + '억원';
   if (v >= 10000) return Math.round(v / 10000).toLocaleString() + '만원';
   return Math.round(v).toLocaleString() + '원';
+}
+
+// ─── 서비스 워커 등록 (오프라인 지원) ───
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
 }
 </script>
 </body>
