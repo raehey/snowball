@@ -1611,11 +1611,9 @@ function resimulate() {
 
   // 커스텀 프리셋으로 시뮬레이션 재실행
   PRESETS._custom = customAllocs.map(a => ({ticker: a.ticker, weight: a.weight}));
-  const origStyle = currentStyle;
   currentStyle = '_custom';
-  runSimulation();
-  currentStyle = origStyle;
   useCustom = true;
+  runSimulation();
 }
 
 // ═══════════════════════════════════════════
