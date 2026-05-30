@@ -38,6 +38,7 @@ html{scroll-behavior:smooth}
   --green:#34C759;--red:#FF3B30;--blue:#007AFF;--purple:#AF52DE;
 }
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased;padding-bottom:env(safe-area-inset-bottom)}
+html.theme-transitioning,html.theme-transitioning *,html.theme-transitioning *::before,html.theme-transitioning *::after{transition:background-color .35s ease,color .35s ease,border-color .35s ease,box-shadow .35s ease,fill .35s ease,stroke .35s ease!important}
 .container{max-width:500px;margin:0 auto;padding:16px}
 h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold);display:none}
 .app-logo{text-align:center;padding:22px 0 2px;position:relative}
@@ -101,6 +102,23 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold);display
 .quick-amounts{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}
 .quick-btn{padding:10px 4px;background:var(--card2);border:1px solid var(--border);border-radius:10px;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;text-align:center;transition:all .2s}
 .quick-btn:active,.quick-btn:hover{background:var(--gold-dim);border-color:var(--gold);color:var(--gold)}
+/* 투자금 증감 스테퍼 */
+.amt-stepper-row{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:6px}
+.amt-step-btn{padding:7px 2px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;text-align:center;border:1px solid var(--border);transition:all .2s;background:var(--card)}
+.amt-step-minus{color:var(--red)}
+.amt-step-minus:active{background:rgba(255,82,82,.12);border-color:var(--red)}
+.amt-step-plus{color:var(--green)}
+.amt-step-plus:active{background:rgba(76,175,80,.12);border-color:var(--green)}
+.amt-step-mult{color:var(--blue)}
+.amt-step-mult:active{background:rgba(74,144,217,.12);border-color:var(--blue)}
+/* 결과 한 줄 요약 복사 */
+.quick-share-snippet{display:flex;align-items:center;gap:8px;margin:10px 0;padding:10px 14px;background:var(--card);border:1px dashed var(--border);border-radius:10px;cursor:pointer;transition:all .25s}
+.quick-share-snippet:active{border-color:var(--gold);background:var(--gold-dim)}
+.quick-share-snippet .qss-text{flex:1;font-size:12px;color:var(--text2);line-height:1.5;word-break:keep-all}
+.quick-share-snippet .qss-icon{font-size:16px;color:var(--text3);flex-shrink:0;transition:transform .2s}
+.quick-share-snippet:active .qss-icon{transform:scale(1.2)}
+.quick-share-snippet.copied{border-color:var(--green);background:rgba(76,175,80,.08)}
+.quick-share-snippet.copied .qss-icon{color:var(--green)}
 /* 한글 금액 읽기 */
 .amount-reading{font-size:12px;color:var(--gold);text-align:right;margin-top:4px;min-height:18px;font-weight:500;letter-spacing:0.3px;opacity:0;transition:opacity .3s ease}
 .amount-reading.visible{opacity:1}
@@ -132,6 +150,13 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold);display
 .metric-explainer .me-close{position:absolute;top:8px;right:10px;background:none;border:none;color:var(--text3);font-size:14px;cursor:pointer;padding:2px 6px;border-radius:4px}
 .metric-explainer .me-close:hover{color:var(--text)}
 [data-theme="light"] .metric-explainer{box-shadow:0 8px 32px rgba(0,0,0,.12)}
+/* 결과 카드 복사 버튼 */
+.rc-copy{position:absolute;top:8px;right:8px;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:3px 6px;font-size:11px;color:var(--text3);cursor:pointer;opacity:0;transition:opacity .2s,transform .15s,background .15s;z-index:2;line-height:1}
+.result-card:hover .rc-copy,.result-card:active .rc-copy{opacity:.8}
+.rc-copy:hover{opacity:1!important;background:var(--gold-dim);color:var(--gold);border-color:var(--gold)}
+.rc-copy:active{transform:scale(.9)}
+.rc-copy.copied{opacity:1!important;background:var(--green);color:#fff;border-color:var(--green)}
+@media(hover:none){.result-card .rc-copy{opacity:.5}}
 /* 투자 성과 등급 배지 */
 .perf-grade{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:7px;font-size:15px;font-weight:900;line-height:1;vertical-align:middle;letter-spacing:0}
 .perf-grade.grade-s{background:linear-gradient(135deg,#FFD700,#FF8C00);color:#000;box-shadow:0 0 10px rgba(255,215,0,.35);animation:gradeGlow 2s ease-in-out infinite}
@@ -320,8 +345,8 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold);display
 .footer-info{text-align:center;padding:20px 0 40px;font-size:11px;color:var(--text3);line-height:1.8}
 
 /* 기간 선택 */
-.period-btns{display:flex;gap:8px;margin-top:10px}
-.period-btn{flex:1;padding:8px;background:var(--card2);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-size:13px;cursor:pointer;text-align:center;transition:all .2s}
+.period-btns{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.period-btn{flex:1;min-width:0;padding:8px 4px;background:var(--card2);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-size:13px;cursor:pointer;text-align:center;transition:all .2s}
 .period-btn.active{background:var(--gold-dim);border-color:var(--gold);color:var(--gold)}
 
 /* 통화 변환 */
@@ -406,6 +431,19 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold);display
 .tab-item svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s}
 .tab-item.active svg{stroke-width:2;transform:scale(1.1)}
 .tab-item:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:12px}
+.tab-badge{position:absolute;top:4px;right:6px;min-width:16px;height:16px;border-radius:8px;background:var(--gold);color:#000;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;pointer-events:none;opacity:0;transform:scale(0);transition:opacity .25s ease,transform .25s ease;line-height:1;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.tab-badge.visible{opacity:1;transform:scale(1)}
+.tab-badge.pulse{animation:badgePulse .6s ease-out}
+@keyframes badgePulse{0%{transform:scale(1)}50%{transform:scale(1.3)}100%{transform:scale(1)}}
+.last-sim-banner{background:linear-gradient(135deg,var(--card) 60%,rgba(255,215,0,.06));border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:border-color .2s,box-shadow .2s;position:relative;overflow:hidden}
+.last-sim-banner:hover,.last-sim-banner:active{border-color:var(--gold);box-shadow:0 0 12px rgba(255,215,0,.1)}
+.last-sim-banner-icon{font-size:20px;flex-shrink:0}
+.last-sim-banner-text{flex:1;min-width:0}
+.last-sim-banner-title{font-size:11px;color:var(--text3);margin-bottom:2px}
+.last-sim-banner-detail{font-size:13px;color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.last-sim-banner-btn{font-size:11px;color:var(--gold);font-weight:600;white-space:nowrap;flex-shrink:0}
+.last-sim-banner-close{position:absolute;top:6px;right:8px;background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;padding:2px 4px;line-height:1}
+@media print{.last-sim-banner{display:none}}
 .tab-page.active{display:block}
 
 /* 포트폴리오 탭 */
@@ -470,6 +508,22 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold);display
 .hist-compare-table .hc-winner{color:var(--green);font-weight:700}
 .hist-compare-table .hc-loser{color:var(--text3)}
 .hist-compare-table tr:last-child td{border-bottom:none}
+/* 오프라인 배너 */
+.offline-banner{position:fixed;top:0;left:0;right:0;z-index:10001;background:linear-gradient(90deg,#b71c1c,#d32f2f);color:#fff;font-size:12px;font-weight:600;text-align:center;padding:6px 12px;transform:translateY(-100%);transition:transform .35s ease;display:flex;align-items:center;justify-content:center;gap:6px;letter-spacing:.3px}
+.offline-banner.visible{transform:translateY(0)}
+.offline-banner .ob-dot{width:8px;height:8px;border-radius:50%;background:#FF8A80;animation:obPulse 1.5s ease-in-out infinite}
+@keyframes obPulse{0%,100%{opacity:.4}50%{opacity:1}}
+.online-toast{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:10002;background:var(--green);color:#fff;font-size:12px;font-weight:600;padding:8px 18px;border-radius:20px;box-shadow:0 4px 12px rgba(0,0,0,.3);animation:onlineToastIn .4s ease-out;pointer-events:none}
+@keyframes onlineToastIn{from{opacity:0;transform:translateX(-50%) translateY(-10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+/* 히스토리 검색 */
+.hist-search-wrap{position:relative;margin-bottom:12px}
+.hist-search{width:100%;padding:10px 36px 10px 14px;background:var(--card2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;outline:none;transition:border-color .2s}
+.hist-search:focus{border-color:var(--gold)}
+.hist-search::placeholder{color:var(--text3)}
+.hist-search-icon{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:14px;pointer-events:none}
+.hist-search-clear{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:2px 6px;display:none;border-radius:4px;transition:color .2s}
+.hist-search-clear:hover{color:var(--text)}
+.hist-search-count{font-size:11px;color:var(--text3);text-align:right;margin-top:4px;display:none}
 /* 입력값 범위 가이드 */
 .adv-range-hint{font-size:10px;line-height:1.5;margin-top:3px;padding:4px 8px;border-radius:6px;transition:all .3s ease;overflow:hidden;max-height:0;opacity:0}
 .adv-range-hint.visible{max-height:60px;opacity:1}
@@ -590,6 +644,10 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold);display
 .toast-icon{font-size:18px;flex-shrink:0}
 @keyframes toastIn{from{opacity:0;transform:translateY(-16px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes toastOut{to{opacity:0;transform:translateY(-12px) scale(.95)}}
+
+/* 스크롤 진행률 바 */
+.scroll-progress{position:fixed;top:0;left:0;width:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--gold2));z-index:10000;transition:none;pointer-events:none;will-change:width;border-radius:0 2px 2px 0;box-shadow:0 0 6px rgba(255,215,0,.3)}
+@media print{.scroll-progress{display:none}}
 
 /* 스크롤-투-탑 버튼 */
 .scroll-top-btn{position:fixed;right:20px;bottom:80px;width:44px;height:44px;border-radius:50%;background:var(--gold);color:#000;border:none;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:99;box-shadow:0 4px 16px rgba(0,0,0,.3),0 0 0 1px rgba(255,215,0,.2);opacity:0;transform:scale(.8) translateY(10px);pointer-events:none;transition:opacity .25s ease,transform .25s ease}
@@ -945,6 +1003,17 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold);display
 .live-div-sub .per-sec{color:var(--green);font-weight:600}
 [data-theme="light"] .live-div-counter{background:linear-gradient(135deg,rgba(153,109,0,.06),rgba(52,199,89,.04));border-color:rgba(153,109,0,.15)}
 
+/* 입력 검증 에러 shake 애니메이션 */
+@keyframes inputShake{0%,100%{transform:translateX(0)}10%,50%,90%{transform:translateX(-4px)}30%,70%{transform:translateX(4px)}}
+.input-shake{animation:inputShake .4s ease;border-color:var(--red)!important;box-shadow:0 0 0 2px rgba(255,82,82,.25)!important}
+.input-shake-label{color:var(--red)!important;transition:color .3s}
+
+/* 시뮬레이션 타임스탬프 */
+.sim-timestamp{text-align:center;font-size:11px;color:var(--text3);padding:6px 0 2px;display:flex;align-items:center;justify-content:center;gap:8px;opacity:0;transition:opacity .3s ease}
+.sim-timestamp.visible{opacity:1}
+.sim-timestamp .st-dot{width:5px;height:5px;border-radius:50%;background:var(--green);flex-shrink:0}
+.sim-timestamp .st-speed{color:var(--text3);font-family:'SF Mono',monospace}
+
 /* prefers-reduced-motion */
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important;scroll-behavior:auto!important}
@@ -964,7 +1033,7 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold);display
   .hidden{display:none!important}
   #tab0{display:block!important}
   .chart-canvas{max-height:300px}
-  .sim-btn,.quick-btn,.quick-adj-btn,.save-share-btn{display:none!important}
+  .sim-btn,.quick-btn,.quick-adj-btn,.save-share-btn,.amt-stepper-row,.quick-share-snippet,.sim-timestamp{display:none!important}
   .yearly-table th,.yearly-table td{border:1px solid #ccc;padding:4px 6px}
 }
 </style>
@@ -1016,6 +1085,9 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold);display
   </div>
 </div>
 
+<!-- 스크롤 진행률 바 -->
+<div class="scroll-progress" id="scrollProgress"></div>
+<div class="offline-banner" id="offlineBanner"><span class="ob-dot"></span>오프라인 상태 — 시세 새로고침 불가</div>
 <!-- 토스트 알림 컨테이너 -->
 <div class="toast-container" id="toastContainer"></div>
 <!-- 스크롤-투-탑 버튼 -->
@@ -1038,6 +1110,9 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold);display
 
   <!-- 배당락일 임박 알림 배너 -->
   <div id="exDivAlert" style="display:none"></div>
+
+  <!-- 마지막 시뮬레이션 빠른 복원 배너 -->
+  <div id="lastSimBanner" style="display:none"></div>
 
   <!-- 입력 접기/펼치기 버튼 -->
   <button class="input-collapse-btn" id="inputCollapseBtn" onclick="toggleInputCollapse()">▲ 입력 접기</button>
@@ -1065,6 +1140,14 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold);display
       <div class="quick-btn" role="button" aria-label="5천만원으로 설정" onclick="setAmount(50000000)">5천만</div>
       <div class="quick-btn" role="button" aria-label="1억원으로 설정" onclick="setAmount(100000000)">1억</div>
       <div class="quick-btn" role="button" aria-label="3억원으로 설정" onclick="setAmount(300000000)">3억</div>
+    </div>
+    <div class="amt-stepper-row">
+      <button class="amt-step-btn amt-step-minus" onclick="adjustAmount(-1000000)">-100만</button>
+      <button class="amt-step-btn amt-step-minus" onclick="adjustAmount(-5000000)">-500만</button>
+      <button class="amt-step-btn amt-step-mult" onclick="multiplyAmount(0.5)">÷2</button>
+      <button class="amt-step-btn amt-step-mult" onclick="multiplyAmount(2)">×2</button>
+      <button class="amt-step-btn amt-step-plus" onclick="adjustAmount(5000000)">+500만</button>
+      <button class="amt-step-btn amt-step-plus" onclick="adjustAmount(1000000)">+100만</button>
     </div>
     <div id="quickEstimate" class="quick-estimate"></div>
   </div>
@@ -1101,6 +1184,8 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold);display
       <div class="period-btn active" role="radio" aria-checked="true" onclick="setPeriod(10)" id="period-10">10년</div>
       <div class="period-btn" role="radio" aria-checked="false" onclick="setPeriod(15)">15년</div>
       <div class="period-btn" role="radio" aria-checked="false" onclick="setPeriod(20)">20년</div>
+      <div class="period-btn" role="radio" aria-checked="false" onclick="setPeriod(25)">25년</div>
+      <div class="period-btn" role="radio" aria-checked="false" onclick="setPeriod(30)">30년</div>
       <div class="period-btn period-custom" role="radio" aria-checked="false" onclick="focusCustomPeriod()"><input type="text" id="customPeriod" class="period-custom-input" placeholder="직접" inputmode="numeric" maxlength="2" aria-label="기간 직접 입력 (년)" onchange="setCustomPeriod()"><span class="period-custom-unit">년</span></div>
     </div>
   </div>
@@ -1310,8 +1395,15 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold);display
     <div id="simSummaryBanner" style="display:none;padding:10px 14px;margin-bottom:12px;background:var(--card);border:1px solid var(--border);border-radius:10px;font-size:11px;color:var(--text2);line-height:1.8"></div>
     <!-- 이전 결과 비교 배너 -->
     <div id="simCompareBanner" style="display:none"></div>
+    <!-- 한 줄 요약 복사 -->
+    <div id="quickShareSnippet" class="quick-share-snippet" style="display:none" onclick="copyQuickSnippet()">
+      <div class="qss-text" id="qssText"></div>
+      <div class="qss-icon">📋</div>
+    </div>
     <!-- 핵심 숫자 -->
     <div class="result-grid" id="resultCards"></div>
+    <!-- 시뮬레이션 타임스탬프 -->
+    <div class="sim-timestamp" id="simTimestamp"><span class="st-dot"></span><span id="simTimeAgo">방금 계산</span> · <span class="st-speed" id="simSpeed">0.00초</span></div>
 
     <!-- 실시간 배당 카운터 -->
     <div class="live-div-counter" id="liveDivCounter" style="display:none">
@@ -1583,6 +1675,12 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold);display
       </div>
     </div>
     <div id="histCompareResult"></div>
+    <div class="hist-search-wrap" id="histSearchWrap">
+      <input type="text" class="hist-search" id="histSearchInput" placeholder="검색 (금액, 기간, 투자성향...)" oninput="onHistSearch()">
+      <span class="hist-search-icon" id="histSearchIcon">🔍</span>
+      <button class="hist-search-clear" id="histSearchClear" onclick="clearHistSearch()">✕</button>
+      <div class="hist-search-count" id="histSearchCount"></div>
+    </div>
     <div id="historyList">
       <div class="pf-empty">
         <div style="font-size:40px;margin-bottom:12px">📝</div>
@@ -1630,7 +1728,7 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold);display
       </div>
       <div class="setting-item">
         <span class="setting-label">앱 버전</span>
-        <span class="setting-value">3.40.0</span>
+        <span class="setting-value">3.49.0</span>
       </div>
       <div class="setting-item">
         <span class="setting-label">현재 환율</span>
@@ -1703,7 +1801,7 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold);display
 <nav class="tab-bar" role="tablist" aria-label="메인 탭">
   <div class="tab-item active" role="tab" aria-label="계산" aria-selected="true" tabindex="0" onclick="switchTab(0)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg></div>
   <div class="tab-item" role="tab" aria-label="포트폴리오" aria-selected="false" tabindex="-1" onclick="switchTab(1)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg></div>
-  <div class="tab-item" role="tab" aria-label="시뮬레이션 내역" aria-selected="false" tabindex="-1" onclick="switchTab(2)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+  <div class="tab-item" role="tab" aria-label="시뮬레이션 내역" aria-selected="false" tabindex="-1" onclick="switchTab(2)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span class="tab-badge" id="histBadge"></span></div>
   <div class="tab-item" role="tab" aria-label="AI 채팅" aria-selected="false" tabindex="-1" onclick="switchTab(3)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
   <div class="tab-item" role="tab" aria-label="설정" aria-selected="false" tabindex="-1" onclick="switchTab(4)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></div>
 </nav>
@@ -1763,6 +1861,12 @@ function toastAlert(message, type) { showToast(message, type || 'info'); }
       requestAnimationFrame(function() {
         const btn = document.getElementById('scrollTopBtn');
         if (btn) btn.classList.toggle('visible', window.scrollY > 600);
+        // 스크롤 진행률 바 업데이트
+        const sp = document.getElementById('scrollProgress');
+        if (sp) {
+          const docH = document.documentElement.scrollHeight - window.innerHeight;
+          sp.style.width = docH > 0 ? (window.scrollY / docH * 100) + '%' : '0';
+        }
         // 플로팅 재계산 바: 계산 탭에서 결과 영역 지나면 표시
         const floatBar = document.getElementById('floatResimBar');
         if (floatBar) {
@@ -2112,6 +2216,10 @@ let simResult = null;
 let prevSimSnapshot = null; // 이전 시뮬레이션 결과 스냅샷 (비교용)
 let isUSD = false; // 통화 모드: false=원화, true=달러
 let cachedNoDripResult = null; // noDRIP 시뮬레이션 캐시 (차트 리드로우 성능 최적화)
+let _simStartTime = 0; // 시뮬레이션 시작 시간
+let _simCalcMs = 0; // 시뮬레이션 계산 시간 (ms)
+let _simTimestampAt = 0; // 시뮬레이션 완료 시각 (epoch ms)
+let _simTimeAgoTimer = null; // 타임스탬프 업데이트 타이머
 
 // ─── 테마 색상 헬퍼 ───
 function tc(varName) {
@@ -2123,9 +2231,12 @@ function toggleTheme() {
   const html = document.documentElement;
   const isLight = html.getAttribute('data-theme') === 'light';
   const newTheme = isLight ? 'dark' : 'light';
+  // 부드러운 테마 전환 트랜지션
+  html.classList.add('theme-transitioning');
   html.setAttribute('data-theme', newTheme);
   localStorage.setItem('snowball_theme', newTheme);
   document.querySelector('meta[name="theme-color"]').content = newTheme === 'light' ? '#F2F2F7' : '#0D0D0D';
+  setTimeout(function() { html.classList.remove('theme-transitioning'); }, 400);
 }
 function restoreTheme() {
   const saved = localStorage.getItem('snowball_theme');
@@ -2469,6 +2580,8 @@ amountEl.addEventListener('input', function() {
   updateQuickEstimate();
   updateAmountReading();
 });
+// 포커스 시 전체 선택 (바로 새 금액 입력 가능)
+amountEl.addEventListener('focus', function() { var el = this; setTimeout(function(){ el.select(); }, 50); });
 // 초기 로드 시 한글 읽기 표시
 setTimeout(updateAmountReading, 200);
 function setAmount(v) {
@@ -2487,6 +2600,36 @@ function setAmount(v) {
 function getAmount() {
   const raw = Number(amountEl.value.replace(/[^0-9]/g, '')) || 0;
   return isUSD ? raw * EXCHANGE_RATE : raw;
+}
+// ─── 투자금 증감 스테퍼 ───
+function adjustAmount(delta) {
+  haptic('light');
+  var current = getAmount();
+  if (isUSD) {
+    var newVal = Math.max(0, current + delta);
+    amountEl.value = Math.round(newVal / EXCHANGE_RATE).toLocaleString();
+  } else {
+    var newVal = Math.max(0, current + delta);
+    amountEl.value = newVal.toLocaleString();
+  }
+  updateConvertedCurrency();
+  hintSimBtn();
+  updateQuickEstimate();
+  updateAmountReading();
+}
+function multiplyAmount(factor) {
+  haptic('light');
+  var current = getAmount();
+  var newVal = Math.max(100000, Math.round(current * factor));
+  if (isUSD) {
+    amountEl.value = Math.round(newVal / EXCHANGE_RATE).toLocaleString();
+  } else {
+    amountEl.value = newVal.toLocaleString();
+  }
+  updateConvertedCurrency();
+  hintSimBtn();
+  updateQuickEstimate();
+  updateAmountReading();
 }
 
 // ─── 통화 변환 ───
@@ -2920,15 +3063,32 @@ function syncContrib(source) {
 // 시뮬레이션 실행
 // ═══════════════════════════════════════════
 function runSimulation() {
+  // 더블클릭 방지: 로딩 중이면 무시
+  const simBtn = document.querySelector('.sim-btn');
+  if (simBtn && simBtn.classList.contains('loading')) return;
   const capital = getAmount();
-  if (capital < 100000) { showToast('최소 10만원 이상 입력해주세요.', 'warning'); return; }
+  if (capital < 100000) {
+    showToast('최소 10만원 이상 입력해주세요.', 'warning');
+    // 입력 필드 shake 애니메이션
+    const inp = document.getElementById('amountInput');
+    if (inp) {
+      inp.classList.remove('input-shake');
+      void inp.offsetWidth;
+      inp.classList.add('input-shake');
+      setTimeout(() => inp.classList.remove('input-shake'), 500);
+    }
+    haptic('error');
+    return;
+  }
   haptic('medium');
   saveSettings();
   const btn = document.querySelector('.sim-btn');
   if (btn) { btn.classList.remove('pulse'); btn.classList.add('loading'); }
+  _simStartTime = performance.now();
   setTimeout(() => { _doSimulation(capital, btn); }, 400);
 }
 function _doSimulation(capital, btn) {
+ try {
   const applyTax = document.getElementById('taxToggle').checked;
   const opts = {
     divGrowth: parseFloat(document.getElementById('divGrowth').value) / 100 || 0,
@@ -2968,6 +3128,9 @@ function _doSimulation(capital, btn) {
 
   // 이전 결과 비교 배너
   renderSimComparison(capital, final, returnRate);
+
+  // 한 줄 요약 복사
+  renderQuickSnippet(capital, final, returnRate);
 
   // 시뮬레이션 입력 요약 배너
   {
@@ -3016,22 +3179,26 @@ function _doSimulation(capital, btn) {
   // 결과 카드 (count-up animation)
   document.getElementById('resultCards').innerHTML = `
     <div class="result-card highlight" onclick="showMetricExplainer('totalAsset',event)" style="cursor:pointer">
+      <button class="rc-copy" onclick="copyCardValue(this,'${fmtKRW(final.totalAsset)}','총 자산');event.stopPropagation()" aria-label="복사">📋</button>
       <div class="rc-label">${currentPeriod}년 후 총 자산 <span style="font-size:10px;color:var(--text3)">ⓘ</span></div>
       <div class="rc-value" data-countup="${final.totalAsset}">0원</div>
       <div class="rc-sub" onclick="showMetricExplainer('cagr',event)" style="cursor:pointer">+<span data-countup-plain="${returnRate}">0</span>% 수익률 · CAGR ${cagr}% <span style="font-size:9px;color:var(--text3)">ⓘ</span></div>
     </div>
     <div class="result-card" onclick="showMetricExplainer('monthlyDiv',event)" style="cursor:pointer">
+      <button class="rc-copy" onclick="copyCardValue(this,'${fmtKRW(final.mNet)}','월 배당금');event.stopPropagation()" aria-label="복사">📋</button>
       <div class="rc-label">월 배당금 (세후) <span style="font-size:10px;color:var(--text3)">ⓘ</span></div>
       <div class="rc-value" data-countup="${final.mNet}">0원</div>
       <div class="rc-sub">세전 ${fmtKRW(final.mGross)}</div>
     </div>
     <div class="result-grid-divider"></div>
     <div class="result-card" onclick="showMetricExplainer('cumDiv',event)" style="cursor:pointer">
+      <button class="rc-copy" onclick="copyCardValue(this,'${fmtKRW(final.cumNet)}','누적 배당금');event.stopPropagation()" aria-label="복사">📋</button>
       <div class="rc-label">누적 배당금 <span style="font-size:10px;color:var(--text3)">ⓘ</span></div>
       <div class="rc-value" data-countup="${final.cumNet}">0원</div>
       <div class="rc-sub">세전 ${fmtKRW(final.cumGross)}</div>
     </div>
     <div class="result-card" onclick="showMetricExplainer('dripEffect',event)" style="cursor:pointer">
+      <button class="rc-copy" onclick="copyCardValue(this,'${fmtKRW(dripEffect)}','DRIP 효과');event.stopPropagation()" aria-label="복사">📋</button>
       <div class="rc-label">DRIP 효과 <span style="font-size:10px;color:var(--text3)">ⓘ</span></div>
       <div class="rc-value" data-countup="${dripEffect}" data-prefix="+" style="color:var(--green)">+0원</div>
       <div class="rc-sub">미재투자 대비</div>
@@ -3652,6 +3819,109 @@ function _doSimulation(capital, btn) {
     document.getElementById('resultCards').innerHTML += hmHTML;
   }
 
+  // ─── 연도별 수익률 트래커 (Year-by-Year Return Tracker) ───
+  if (currentPeriod >= 2) {
+    const yoyData = [];
+    let prevAsset = capital;
+    for (let y = 1; y <= currentPeriod; y++) {
+      const rec = simResult.records.find(r => r.month === y * 12);
+      if (rec) {
+        // 해당 연도의 추가 투자금 합산
+        let yearContrib = 0;
+        if (opts.annualContrib > 0) {
+          const cf = (opts.contribGrowthRate > 0 && y > 1) ? Math.pow(1 + (opts.contribGrowthRate || 0), y - 1) : 1;
+          yearContrib = opts.annualContrib * cf;
+        }
+        // 투자 수익률 = (기말자산 - 기초자산 - 추가투자) / (기초자산 + 추가투자/2) * 100
+        const base = prevAsset + yearContrib / 2;
+        const yoyReturn = base > 0 ? ((rec.totalAsset - prevAsset - yearContrib) / base * 100) : 0;
+        yoyData.push({ year: y, ret: yoyReturn, asset: rec.totalAsset });
+        prevAsset = rec.totalAsset;
+      }
+    }
+    if (yoyData.length >= 2) {
+      const maxRet = Math.max(...yoyData.map(d => Math.abs(d.ret)), 1);
+      const avgRet = yoyData.reduce((s, d) => s + d.ret, 0) / yoyData.length;
+      const baseYear = new Date().getFullYear();
+      let yoyHTML = '<div style="grid-column:1/-1;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-top:4px">';
+      yoyHTML += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div style="font-size:12px;color:var(--blue);font-weight:600">📊 연도별 투자 수익률</div><div style="font-size:11px;color:var(--text3)">평균 ' + avgRet.toFixed(1) + '%</div></div>';
+      yoyHTML += '<div style="font-size:10px;color:var(--text3);margin-bottom:10px">매년 투자 원금 대비 수익률 (추가 적립 보정)</div>';
+      yoyHTML += '<div style="display:flex;flex-direction:column;gap:4px">';
+      for (const d of yoyData) {
+        const w = Math.min(100, Math.abs(d.ret) / maxRet * 85);
+        const color = d.ret >= 0 ? 'var(--green)' : 'var(--red)';
+        const bgColor = d.ret >= 0 ? 'rgba(76,175,80,.25)' : 'rgba(255,82,82,.25)';
+        const actualYear = baseYear + d.year;
+        const showRow = currentPeriod <= 15 || d.year === 1 || d.year === currentPeriod || d.year % (currentPeriod <= 25 ? 5 : 10) === 0;
+        if (showRow) {
+          yoyHTML += '<div style="display:flex;align-items:center;gap:6px;height:22px">';
+          yoyHTML += '<div style="width:50px;font-size:10px;color:var(--text3);text-align:right;flex-shrink:0">' + d.year + '년\'' + String(actualYear).slice(-2) + '</div>';
+          yoyHTML += '<div style="flex:1;height:14px;background:var(--card2);border-radius:3px;overflow:hidden;position:relative">';
+          yoyHTML += '<div style="height:100%;width:' + w.toFixed(1) + '%;background:' + bgColor + ';border-radius:3px;transition:width .5s ease"></div>';
+          yoyHTML += '</div>';
+          yoyHTML += '<div style="width:48px;font-size:11px;font-weight:600;color:' + color + ';text-align:right;flex-shrink:0">' + (d.ret >= 0 ? '+' : '') + d.ret.toFixed(1) + '%</div>';
+          yoyHTML += '</div>';
+        }
+      }
+      yoyHTML += '</div>';
+      // 최고/최저 연도 표시
+      const bestYear = yoyData.reduce((a, b) => a.ret > b.ret ? a : b);
+      const worstYear = yoyData.reduce((a, b) => a.ret < b.ret ? a : b);
+      yoyHTML += '<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:10px">';
+      yoyHTML += '<div style="color:var(--green)">최고: ' + bestYear.year + '년차 +' + bestYear.ret.toFixed(1) + '%</div>';
+      yoyHTML += '<div style="color:' + (worstYear.ret < 0 ? 'var(--red)' : 'var(--text3)') + '">최저: ' + worstYear.year + '년차 ' + (worstYear.ret >= 0 ? '+' : '') + worstYear.ret.toFixed(1) + '%</div>';
+      yoyHTML += '</div>';
+      yoyHTML += '</div>';
+      document.getElementById('resultCards').innerHTML += yoyHTML;
+    }
+  }
+
+  // ─── DRIP 주식수 성장 카드 (DRIP Share Growth) ───
+  if (opts.enableDRIP && simResult.states.length > 0) {
+    const totalInitShares = simResult.states.reduce((s, st) => s + st.initShares, 0);
+    const totalFinalShares = simResult.states.reduce((s, st) => s + st.shares, 0);
+    const totalGained = totalFinalShares - totalInitShares;
+    if (totalGained > 0) {
+      let sgHTML = '<div style="grid-column:1/-1;background:linear-gradient(135deg,rgba(255,215,0,.06),rgba(255,215,0,.02));border:1px solid rgba(255,215,0,.2);border-radius:12px;padding:14px 16px;margin-top:4px">';
+      sgHTML += '<div style="font-size:12px;color:var(--gold);font-weight:600;margin-bottom:4px">🔄 DRIP으로 모은 주식</div>';
+      sgHTML += '<div style="font-size:10px;color:var(--text3);margin-bottom:12px">' + currentPeriod + '년간 배당금 재투자로 자동 매수된 주식 수</div>';
+      // 전체 요약
+      const gainPct = totalInitShares > 0 ? ((totalGained / totalInitShares) * 100).toFixed(0) : '∞';
+      sgHTML += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:10px 12px;background:var(--card2);border-radius:10px">';
+      sgHTML += '<div style="flex:1"><div style="font-size:11px;color:var(--text3)">초기 보유</div><div style="font-size:20px;font-weight:800;color:var(--text)">' + totalInitShares.toLocaleString() + '<span style="font-size:12px;color:var(--text3)">주</span></div></div>';
+      sgHTML += '<div style="font-size:18px;color:var(--gold)">→</div>';
+      sgHTML += '<div style="flex:1;text-align:right"><div style="font-size:11px;color:var(--text3)">최종 보유</div><div style="font-size:20px;font-weight:800;color:var(--gold)">' + totalFinalShares.toLocaleString() + '<span style="font-size:12px;color:var(--text3)">주</span></div></div>';
+      sgHTML += '</div>';
+      sgHTML += '<div style="text-align:center;margin-bottom:12px;font-size:13px;color:var(--green);font-weight:700">+' + totalGained.toLocaleString() + '주 추가 (' + gainPct + '% 증가)</div>';
+      // 종목별 상세
+      sgHTML += '<div style="display:flex;flex-direction:column;gap:6px">';
+      for (const s of simResult.states) {
+        const gained = s.shares - s.initShares;
+        if (gained <= 0) continue;
+        const gPct = s.initShares > 0 ? ((gained / s.initShares) * 100).toFixed(0) : '∞';
+        const gainedValue = gained * s.currentPrice;
+        const barW = totalGained > 0 ? Math.max(5, (gained / totalGained) * 100) : 0;
+        sgHTML += '<div style="display:flex;align-items:center;gap:8px">';
+        sgHTML += '<div style="width:48px;font-size:11px;font-weight:600;color:var(--gold);flex-shrink:0">' + s.ticker + '</div>';
+        sgHTML += '<div style="flex:1;height:16px;background:var(--card2);border-radius:4px;overflow:hidden;position:relative">';
+        // 초기 주식 부분
+        const initW = totalFinalShares > 0 ? (s.initShares / s.shares * 100) : 0;
+        sgHTML += '<div style="position:absolute;height:100%;width:' + initW.toFixed(1) + '%;background:rgba(99,99,102,.3);border-radius:4px"></div>';
+        sgHTML += '<div style="position:absolute;height:100%;width:100%;background:rgba(255,215,0,.25);border-radius:4px"></div>';
+        sgHTML += '</div>';
+        sgHTML += '<div style="width:80px;font-size:10px;color:var(--text2);text-align:right;flex-shrink:0">+' + gained.toLocaleString() + '주 <span style="color:var(--green)">(+' + gPct + '%)</span></div>';
+        sgHTML += '</div>';
+      }
+      sgHTML += '</div>';
+      // DRIP으로 추가된 주식의 현재 가치
+      const dripShareValue = simResult.states.reduce((sum, s) => sum + (s.shares - s.initShares) * s.currentPrice, 0);
+      sgHTML += '<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,215,0,.15);text-align:center;font-size:11px;color:var(--text2)">DRIP 주식의 현재 가치: <span style="color:var(--gold);font-weight:700">' + fmtKRW(dripShareValue) + '</span></div>';
+      sgHTML += '<div style="margin-top:4px;text-align:center;font-size:10px;color:var(--text3)">배당금이 새 주식을 사고, 그 주식이 또 배당을 만드는 눈덩이 효과</div>';
+      sgHTML += '</div>';
+      document.getElementById('resultCards').innerHTML += sgHTML;
+    }
+  }
+
   animateResultCards();
   collapsifyInsightCards();
 
@@ -3894,10 +4164,16 @@ function _doSimulation(capital, btn) {
 
   // 히스토리에 저장
   saveToHistory(capital, currentStyle, currentPeriod, final.totalAsset, final.mNet, final.cumNet);
+  dismissLastSimBanner();
 
   // 커스텀 편집 UI 빌드
   if (!useCustom) customAllocs = PRESETS[currentStyle].map(p => ({...p}));
   buildCustomUI();
+
+  // 시뮬레이션 타임스탬프 업데이트
+  _simCalcMs = performance.now() - _simStartTime;
+  _simTimestampAt = Date.now();
+  updateSimTimestamp();
 
   // 결과 표시 (섹션별 순차 페이드인)
   const resEl = document.getElementById('results');
@@ -3931,6 +4207,11 @@ function _doSimulation(capital, btn) {
       setTimeout(() => { launchConfetti(); showToast(celebMsg, 'success', 4000); }, 600);
     }
   }
+ } catch(e) {
+  console.error('시뮬레이션 에러:', e);
+  showToast('시뮬레이션 중 오류가 발생했습니다: ' + e.message, 'error');
+  if (btn) btn.classList.remove('loading');
+ }
 }
 
 // ─── 종목 카드 정렬 ───
@@ -5524,6 +5805,34 @@ function fallbackCopy(text) {
   document.execCommand('copy'); document.body.removeChild(ta);
   showToast('결과가 클립보드에 복사되었습니다!', 'success');
 }
+// ─── 결과 한 줄 요약 복사 ───
+function renderQuickSnippet(capital, final, returnRate) {
+  var el = document.getElementById('quickShareSnippet');
+  var txtEl = document.getElementById('qssText');
+  if (!el || !txtEl) return;
+  var styleNames = { conservative: '안정형', balanced: '균형형', aggressive: '공격형', _custom: '커스텀' };
+  var styleName = styleNames[currentStyle] || currentStyle;
+  var snippet = fmtKRW(capital) + ' → ' + currentPeriod + '년 후 ' + fmtKRW(final.totalAsset) + ' (+' + returnRate + '%) · 월배당 ' + fmtKRW(final.mNet) + ' [' + styleName + ']';
+  txtEl.textContent = snippet;
+  el.style.display = '';
+  el.setAttribute('data-snippet', snippet);
+}
+function copyQuickSnippet() {
+  var el = document.getElementById('quickShareSnippet');
+  if (!el) return;
+  var text = el.getAttribute('data-snippet') || '';
+  if (!text) return;
+  haptic('medium');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function() {
+      showToast('한 줄 요약이 복사되었습니다!', 'success');
+      el.classList.add('copied');
+      setTimeout(function() { el.classList.remove('copied'); }, 1500);
+    }).catch(function() { fallbackCopy(text); });
+  } else {
+    fallbackCopy(text);
+  }
+}
 
 function shareResult() {
   const cvs = buildResultCanvas();
@@ -5834,7 +6143,18 @@ function closeChartFullscreen() {
   chartFsActive = false;
   haptic('light');
 }
-document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && chartFsActive) closeChartFullscreen(); });
+// ─── 전역 ESC 키 핸들러 (모든 모달/오버레이 닫기) ───
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Escape') return;
+  // 우선순위: 풀스크린 차트 → 퀴즈 → 종목 시트 → 지표 설명 팝업
+  if (chartFsActive) { closeChartFullscreen(); return; }
+  var quiz = document.getElementById('quizOverlay');
+  if (quiz) { closeQuiz(); return; }
+  var sheet = document.getElementById('stockSheetOverlay');
+  if (sheet && sheet.classList.contains('active')) { closeStockSheet(); return; }
+  var explainer = document.getElementById('metricExplainer');
+  if (explainer && explainer.classList.contains('show')) { closeMetricExplainer(); return; }
+});
 
 function switchChartFS(idx) {
   chartFsIndex = idx;
@@ -6172,6 +6492,28 @@ function switchTab(idx) {
 })();
 
 // ═══════════════════════════════════════════
+// 히스토리 탭 배지 카운터
+// ═══════════════════════════════════════════
+function updateHistBadge(animate) {
+  var badge = document.getElementById('histBadge');
+  if (!badge) return;
+  try {
+    var count = JSON.parse(localStorage.getItem('snowball_history') || '[]').length;
+    if (count > 0) {
+      badge.textContent = count > 99 ? '99+' : count;
+      badge.classList.add('visible');
+      if (animate) {
+        badge.classList.remove('pulse');
+        void badge.offsetWidth;
+        badge.classList.add('pulse');
+      }
+    } else {
+      badge.classList.remove('visible');
+    }
+  } catch(e) { badge.classList.remove('visible'); }
+}
+
+// ═══════════════════════════════════════════
 // 히스토리 (시뮬레이션 내역 저장)
 // ═══════════════════════════════════════════
 function saveToHistory(capital, style, period, finalAsset, monthlyDiv, cumDiv) {
@@ -6201,6 +6543,7 @@ function saveToHistory(capital, style, period, finalAsset, monthlyDiv, cumDiv) {
     });
     if (history.length > 30) history.length = 30;
     localStorage.setItem('snowball_history', JSON.stringify(history));
+    updateHistBadge(true);
   } catch(e) {}
 }
 
@@ -6248,10 +6591,35 @@ function renderHistory() {
       filtered = filtered.filter(h => isFavorite(h));
     }
 
+    // 검색 필터 적용
+    var countEl = document.getElementById('histSearchCount');
+    if (histSearchQuery) {
+      var beforeCount = filtered.length;
+      filtered = filtered.filter(function(h) {
+        var searchText = [
+          h.date, h.style, fmtKRW(h.capital), fmtKRW(h.finalAsset),
+          fmtKRW(h.monthlyDiv), h.period + '년', h.returnRate + '%',
+          (h.stocks || []).map(function(s) { return s.ticker; }).join(' ')
+        ].join(' ').toLowerCase();
+        return searchText.indexOf(histSearchQuery) >= 0;
+      });
+      if (countEl) {
+        countEl.style.display = 'block';
+        countEl.textContent = beforeCount + '건 중 ' + filtered.length + '건 일치';
+      }
+    } else {
+      if (countEl) countEl.style.display = 'none';
+    }
+
     if (filtered.length === 0) {
-      const emptyMsg = currentHistTab === 'fav'
-        ? '<div class="pf-empty"><div style="font-size:40px;margin-bottom:12px">⭐</div><div>즐겨찾기한 내역이 없습니다</div><div style="font-size:12px;margin-top:8px;color:var(--text3)">결과 카드의 ☆ 아이콘을 눌러<br>즐겨찾기에 추가하세요</div></div>'
-        : '<div class="pf-empty"><div style="font-size:40px;margin-bottom:12px">📝</div><div>아직 시뮬레이션 내역이 없습니다</div></div>';
+      var emptyMsg;
+      if (histSearchQuery) {
+        emptyMsg = '<div class="pf-empty"><div style="font-size:40px;margin-bottom:12px">🔍</div><div>검색 결과가 없습니다</div><div style="font-size:12px;margin-top:8px;color:var(--text3)">다른 키워드로 검색해보세요</div></div>';
+      } else if (currentHistTab === 'fav') {
+        emptyMsg = '<div class="pf-empty"><div style="font-size:40px;margin-bottom:12px">⭐</div><div>즐겨찾기한 내역이 없습니다</div><div style="font-size:12px;margin-top:8px;color:var(--text3)">결과 카드의 ☆ 아이콘을 눌러<br>즐겨찾기에 추가하세요</div></div>';
+      } else {
+        emptyMsg = '<div class="pf-empty"><div style="font-size:40px;margin-bottom:12px">📝</div><div>아직 시뮬레이션 내역이 없습니다</div></div>';
+      }
       el.innerHTML = emptyMsg;
       return;
     }
@@ -6351,6 +6719,7 @@ function deleteHistoryItem(idx) {
     history.splice(idx, 1);
     localStorage.setItem('snowball_history', JSON.stringify(history));
     renderHistory();
+    updateHistBadge();
   } catch(e) {}
 }
 
@@ -6359,6 +6728,7 @@ function clearHistory() {
     localStorage.removeItem('snowball_history');
     localStorage.removeItem('snowball_favorites');
     renderHistory();
+    updateHistBadge();
   }
 }
 
@@ -7413,6 +7783,40 @@ function checkExDivAlerts() {
   alertEl.style.display = '';
 }
 setTimeout(checkExDivAlerts, 500);
+updateHistBadge();
+
+// ─── 마지막 시뮬레이션 빠른 복원 배너 ───
+function showLastSimBanner() {
+  var banner = document.getElementById('lastSimBanner');
+  if (!banner) return;
+  try {
+    var history = JSON.parse(localStorage.getItem('snowball_history') || '[]');
+    if (history.length === 0) { banner.style.display = 'none'; return; }
+    // 이미 시뮬레이션 결과가 있으면 숨김
+    if (simResult) { banner.style.display = 'none'; return; }
+    // 세션에서 이미 닫았으면 숨김
+    if (window._lastSimBannerDismissed) { banner.style.display = 'none'; return; }
+    var h = history[0];
+    var detail = fmtKRW(h.capital) + ' · ' + h.period + '년 · ' + h.style;
+    var resultInfo = '→ ' + fmtKRW(h.finalAsset) + ' (월 ' + fmtKRW(h.monthlyDiv) + ')';
+    banner.innerHTML = '<div class="last-sim-banner" onclick="rerunFromHistory(0)">' +
+      '<div class="last-sim-banner-icon">🕐</div>' +
+      '<div class="last-sim-banner-text">' +
+        '<div class="last-sim-banner-title">마지막 시뮬레이션 · ' + h.date + '</div>' +
+        '<div class="last-sim-banner-detail">' + detail + ' ' + resultInfo + '</div>' +
+      '</div>' +
+      '<div class="last-sim-banner-btn">다시 계산 →</div>' +
+      '<button class="last-sim-banner-close" onclick="event.stopPropagation();dismissLastSimBanner()" aria-label="닫기">✕</button>' +
+    '</div>';
+    banner.style.display = '';
+  } catch(e) { banner.style.display = 'none'; }
+}
+function dismissLastSimBanner() {
+  var banner = document.getElementById('lastSimBanner');
+  if (banner) banner.style.display = 'none';
+  window._lastSimBannerDismissed = true;
+}
+setTimeout(showLastSimBanner, 600);
 
 // ─── URL 파라미터에서 설정 로드 후 자동 시뮬레이션 ───
 (function() {
@@ -8317,6 +8721,36 @@ document.addEventListener('click', function(e) {
   }
 });
 
+// ─── 결과 카드 값 복사 ───
+function copyCardValue(btn, value, label) {
+  if (!navigator.clipboard) { showToast('복사 미지원 브라우저', 'warning'); return; }
+  navigator.clipboard.writeText(value).then(function() {
+    btn.classList.add('copied');
+    btn.textContent = '✓';
+    haptic('light');
+    showToast(label + ' 복사됨: ' + value, 'success', 1500);
+    setTimeout(function() { btn.classList.remove('copied'); btn.textContent = '📋'; }, 1200);
+  }).catch(function() { showToast('복사 실패', 'warning'); });
+}
+
+// ─── 글로벌 키보드 단축키 (계산 탭) ───
+document.addEventListener('keydown', function(e) {
+  // 입력 필드에 포커스 중이면 무시
+  var tag = (e.target.tagName || '').toLowerCase();
+  if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable) return;
+  // 계산 탭이 아니면 무시
+  var calcTab = document.getElementById('tabCalc');
+  if (!calcTab || !calcTab.classList.contains('active')) return;
+  // Enter → 시뮬레이션 실행
+  if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+    e.preventDefault(); runSimulation(); return;
+  }
+  // 1/2/3 → 투자 성향 전환
+  if (e.key === '1') { selectStyle('conservative'); showToast('🛡️ 안정형 선택', 'info', 1200); return; }
+  if (e.key === '2') { selectStyle('balanced'); showToast('⚖️ 균형형 선택', 'info', 1200); return; }
+  if (e.key === '3') { selectStyle('aggressive'); showToast('🔥 공격형 선택', 'info', 1200); return; }
+});
+
 // ═══════════════════════════════════════════
 // 고급 옵션 입력값 범위 가이드
 // ═══════════════════════════════════════════
@@ -8503,6 +8937,90 @@ function runHistCompare() {
       document.getElementById('histCompareResult').scrollIntoView({behavior:'smooth', block:'start'});
     }, 100);
   } catch(e) { showToast('비교 중 오류가 발생했습니다', 'error'); }
+}
+
+// ─── 시뮬레이션 타임스탬프 업데이트 ───
+function updateSimTimestamp() {
+  var el = document.getElementById('simTimestamp');
+  if (!el || !_simTimestampAt) return;
+  // 계산 속도 표시
+  var speedEl = document.getElementById('simSpeed');
+  if (speedEl) speedEl.textContent = (_simCalcMs / 1000).toFixed(2) + '초';
+  // 경과 시간 표시
+  var agoEl = document.getElementById('simTimeAgo');
+  if (agoEl) {
+    var diff = Date.now() - _simTimestampAt;
+    var txt = '';
+    if (diff < 5000) txt = '방금 계산';
+    else if (diff < 60000) txt = Math.floor(diff / 1000) + '초 전';
+    else if (diff < 3600000) txt = Math.floor(diff / 60000) + '분 전';
+    else txt = Math.floor(diff / 3600000) + '시간 전';
+    agoEl.textContent = txt;
+  }
+  el.classList.add('visible');
+  // 자동 갱신 (1분마다)
+  if (_simTimeAgoTimer) clearInterval(_simTimeAgoTimer);
+  _simTimeAgoTimer = setInterval(function() {
+    var a = document.getElementById('simTimeAgo');
+    if (!a || !_simTimestampAt) return;
+    var d = Date.now() - _simTimestampAt;
+    if (d < 5000) a.textContent = '방금 계산';
+    else if (d < 60000) a.textContent = Math.floor(d / 1000) + '초 전';
+    else if (d < 3600000) a.textContent = Math.floor(d / 60000) + '분 전';
+    else a.textContent = Math.floor(d / 3600000) + '시간 전';
+  }, 30000);
+}
+
+// ─── 오프라인/온라인 감지 ───
+(function() {
+  var banner = document.getElementById('offlineBanner');
+  var wasOffline = false;
+  function setOffline() {
+    banner.classList.add('visible');
+    wasOffline = true;
+  }
+  function setOnline() {
+    banner.classList.remove('visible');
+    if (wasOffline) {
+      wasOffline = false;
+      var ot = document.createElement('div');
+      ot.className = 'online-toast';
+      ot.textContent = '✓ 온라인 복구됨';
+      document.body.appendChild(ot);
+      setTimeout(function() { ot.style.opacity = '0'; ot.style.transition = 'opacity .4s'; }, 2000);
+      setTimeout(function() { ot.remove(); }, 2500);
+      // 자동으로 시세 새로고침 시도
+      if (typeof refreshMarketData === 'function') refreshMarketData();
+    }
+  }
+  window.addEventListener('offline', setOffline);
+  window.addEventListener('online', setOnline);
+  if (!navigator.onLine) setOffline();
+})();
+
+// ─── 히스토리 검색 필터 ───
+var histSearchQuery = '';
+function onHistSearch() {
+  var input = document.getElementById('histSearchInput');
+  var clearBtn = document.getElementById('histSearchClear');
+  var icon = document.getElementById('histSearchIcon');
+  histSearchQuery = (input.value || '').trim().toLowerCase();
+  if (histSearchQuery) {
+    clearBtn.style.display = 'block';
+    icon.style.display = 'none';
+  } else {
+    clearBtn.style.display = 'none';
+    icon.style.display = '';
+  }
+  renderHistory();
+}
+function clearHistSearch() {
+  document.getElementById('histSearchInput').value = '';
+  histSearchQuery = '';
+  document.getElementById('histSearchClear').style.display = 'none';
+  document.getElementById('histSearchIcon').style.display = '';
+  document.getElementById('histSearchCount').style.display = 'none';
+  renderHistory();
 }
 
 // ─── 서비스 워커 등록 (오프라인 지원) ───
