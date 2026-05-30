@@ -569,6 +569,11 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold);display
 .setting-item{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--border)}
 .setting-label{font-size:14px}
 .setting-value{font-size:13px;color:var(--text2)}
+.kbd-shortcuts{display:flex;flex-direction:column;gap:8px;padding:8px 0}
+.kbd-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0}
+.kbd-keys{display:flex;gap:4px}
+.kbd-keys kbd{display:inline-block;padding:3px 8px;font-size:12px;font-family:'SF Mono',monospace;background:var(--card2);border:1px solid var(--border);border-radius:6px;color:var(--text);box-shadow:0 1px 0 var(--border);min-width:28px;text-align:center;font-weight:600}
+.kbd-desc{font-size:13px;color:var(--text2)}
 .theme-switch{position:relative;width:50px;height:28px;background:var(--border);border-radius:14px;cursor:pointer;transition:background .3s;border:none;padding:0}
 .theme-switch::after{content:'🌙';position:absolute;left:2px;top:2px;width:24px;height:24px;background:var(--card);border-radius:12px;transition:transform .3s;display:flex;align-items:center;justify-content:center;font-size:14px}
 [data-theme="light"] .theme-switch{background:var(--gold)}
@@ -1728,7 +1733,7 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold);display
       </div>
       <div class="setting-item">
         <span class="setting-label">앱 버전</span>
-        <span class="setting-value">3.49.0</span>
+        <span class="setting-value">3.50.0</span>
       </div>
       <div class="setting-item">
         <span class="setting-label">현재 환율</span>
@@ -1750,6 +1755,17 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold);display
         <span class="setting-label" style="color:var(--red)">모든 데이터 초기화</span>
         <span class="setting-value">→</span>
       </div>
+    </div>
+    <div class="section" style="margin-top:16px">
+      <div class="section-title">키보드 단축키</div>
+      <div class="kbd-shortcuts">
+        <div class="kbd-row"><span class="kbd-keys"><kbd>Enter</kbd></span><span class="kbd-desc">시뮬레이션 실행</span></div>
+        <div class="kbd-row"><span class="kbd-keys"><kbd>1</kbd></span><span class="kbd-desc">안정형 선택</span></div>
+        <div class="kbd-row"><span class="kbd-keys"><kbd>2</kbd></span><span class="kbd-desc">균형형 선택</span></div>
+        <div class="kbd-row"><span class="kbd-keys"><kbd>3</kbd></span><span class="kbd-desc">공격형 선택</span></div>
+        <div class="kbd-row"><span class="kbd-keys"><kbd>Esc</kbd></span><span class="kbd-desc">모달/오버레이 닫기</span></div>
+      </div>
+      <div style="font-size:11px;color:var(--text3);padding:4px 0 0">입력 필드에 포커스 중일 때는 비활성화됩니다</div>
     </div>
     <div class="section" style="margin-top:16px">
       <div class="section-title">정보</div>
@@ -3966,6 +3982,9 @@ function _doSimulation(capital, btn) {
   // 수익 구성 분해
   renderReturnBreakdown(capital, final, finalNoDrip, dripEffect, opts);
 
+  // 연도별 레코드 (여러 곳에서 사용)
+  const yearlyRecords = simResult.records.filter(r => r.month % 12 === 0);
+
   // 배당 더블링 타임
   renderDoublingTime(yearlyRecords, capital, final, cagr);
 
@@ -4040,7 +4059,6 @@ function _doSimulation(capital, btn) {
   let prevYearDiv = 0; // 전년 월배당 (YoY 계산용)
   const _baseYear = new Date().getFullYear(); // 실제 연도 표시용
   // 최대 자산값 계산 (인라인 바 비율용)
-  const yearlyRecords = simResult.records.filter(r => r.month % 12 === 0);
   const maxAsset = yearlyRecords.length > 0 ? Math.max(...yearlyRecords.map(r => r.totalAsset)) : 1;
 
   // 마일스톤 뱃지 생성 함수
@@ -6636,7 +6654,7 @@ function renderHistory() {
         <div class="hist-check">${checkMark}</div>
         <button class="hist-fav ${starred?'starred':''}" onclick="event.stopPropagation();toggleFavorite(${i})" aria-label="즐겨찾기" ${compareMode?'style="display:none"':''}>${starred?'★':'☆'}</button>
         <button class="hist-delete" onclick="event.stopPropagation();deleteHistoryItem(${i})" ${compareMode?'style="display:none"':''}>✕</button>
-        <div class="hist-date">${h.date}</div>
+        <div class="hist-date">${formatRelativeTime(h.date)} <span style="color:var(--text3);font-size:10px">${h.date}</span></div>
         <div class="hist-summary">${fmtKRW(h.capital)} → <span style="color:var(--gold);font-weight:700">${fmtKRW(h.finalAsset)}</span> (${h.period}년)</div>
         <div class="hist-detail">${h.style} | 월배당 ${fmtKRW(h.monthlyDiv)} | 누적 ${fmtKRW(h.cumDiv)}</div>
       </div>
@@ -7058,6 +7076,29 @@ async function fetchAndAddPortfolioStock(ticker) {
 }
 
 // ─── 포맷 유틸 ───
+function formatRelativeTime(dateStr) {
+  try {
+    var parts = dateStr.split(/[\.\s:]/);
+    var d = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]),
+                     parts[3] ? parseInt(parts[3]) : 0, parts[4] ? parseInt(parts[4]) : 0);
+    var now = new Date();
+    var diff = now - d;
+    if (diff < 0) return dateStr;
+    var sec = Math.floor(diff / 1000);
+    if (sec < 60) return '방금 전';
+    var min = Math.floor(sec / 60);
+    if (min < 60) return min + '분 전';
+    var hr = Math.floor(min / 60);
+    if (hr < 24) return hr + '시간 전';
+    var day = Math.floor(hr / 24);
+    if (day === 1) return '어제';
+    if (day < 7) return day + '일 전';
+    if (day < 30) return Math.floor(day / 7) + '주 전';
+    if (day < 365) return Math.floor(day / 30) + '개월 전';
+    return Math.floor(day / 365) + '년 전';
+  } catch(e) { return dateStr; }
+}
+
 function fmtKRW(v) {
   if (v >= 100000000) return (v / 100000000).toFixed(2) + '억원';
   if (v >= 10000) return Math.round(v / 10000).toLocaleString() + '만원';
