@@ -1,5 +1,5 @@
 // 눈덩이 Service Worker — Offline Support
-const CACHE_NAME = 'snowball-v1';
+const CACHE_NAME = 'snowball-v4.3.0';
 const ASSETS = [
   './',
   './index.html',
