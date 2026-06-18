@@ -102,7 +102,6 @@
 .u-redcard{grid-column:1/-1;background:linear-gradient(135deg,rgba(255,82,82,.07),rgba(255,82,82,.02));border:1px solid rgba(255,82,82,.2);border-radius:12px;padding:14px 16px;margin-top:4px}
 .u-purplecard{grid-column:1/-1;background:linear-gradient(135deg,rgba(155,89,182,.06),rgba(155,89,182,.02));border:1px solid rgba(155,89,182,.2);border-radius:12px;padding:14px 16px;margin-top:4px}
 .u-cred{color:var(--red)}
-.u-t10g{font-size:10px;color:var(--text3)}
 .u-mb12{margin-bottom:12px}
 .u-mb16{margin-bottom:16px}
 .u-sectsep{margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
@@ -1606,19 +1605,6 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold);display
 .risk-gauge-factors{display:flex;flex-wrap:wrap;gap:6px}
 .risk-factor-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;font-size:10px;border:1px solid var(--border);background:var(--card2)}
 .risk-factor-chip .rf-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
-/* 원클릭 투자 시나리오 템플릿 */
-.scenario-templates{margin-bottom:16px}
-.scenario-templates .st-title{font-size:11px;color:var(--text3);font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:6px}
-.scenario-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-@media(max-width:360px){.scenario-grid{grid-template-columns:1fr}}
-.scenario-card{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:12px;cursor:pointer;transition:all .25s ease;position:relative;overflow:hidden}
-.scenario-card:hover,.scenario-card:active{border-color:var(--gold);background:var(--gold-dim)}
-.scenario-card:active{transform:scale(.97)}
-.scenario-card .sc-icon{font-size:20px;margin-bottom:4px}
-.scenario-card .sc-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px}
-.scenario-card .sc-desc{font-size:10px;color:var(--text3);line-height:1.4}
-.scenario-card .sc-tags{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px}
-.scenario-card .sc-tag{font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(255,215,0,.08);color:var(--gold);font-weight:600;border:1px solid rgba(255,215,0,.15)}
 .skip-link{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:10001;background:var(--gold);color:#000;padding:12px 20px;border-radius:0 0 12px 0;font-size:14px;font-weight:600;text-decoration:none}
 .skip-link:focus{position:fixed;left:0;top:0;width:auto;height:auto;overflow:visible}
 </style>
@@ -2676,7 +2662,7 @@ h1{font-size:20px;text-align:center;padding:20px 0 4px;color:var(--gold);display
       <div class="settings-acc-body">
       <div class="setting-item">
         <span class="setting-label">앱 버전</span>
-        <span class="setting-value">4.50.19</span>
+        <span class="setting-value">4.50.29</span>
       </div>
       <div class="setting-item">
         <span class="setting-label">현재 환율</span>
@@ -3680,7 +3666,7 @@ function simulate(capital, style, years, opts) {
         const netPriceGrowth = priceGrowth - er;
         const basePriceFactor = netPriceGrowth !== 0 ? Math.pow(1 + netPriceGrowth, yearIdx) : 1;
         s.currentPrice = s.stock.price * basePriceFactor * fxFactor;
-        if (divGrowth > 0) {
+        if (divGrowth !== 0) {
           const dFactor = Math.pow(1 + divGrowth, yearIdx);
           const pFactor = basePriceFactor;
           s.currentYield = s.stock.dividendYield * (dFactor / pFactor);
@@ -3689,7 +3675,7 @@ function simulate(capital, style, years, opts) {
     }
 
     // 추가 투자 (연간 증가율 반영)
-    const contribFactor = (contribGrowthRate > 0 && yearIdx > 0) ? Math.pow(1 + contribGrowthRate, yearIdx) : 1;
+    const contribFactor = (contribGrowthRate !== 0 && yearIdx > 0) ? Math.pow(1 + contribGrowthRate, yearIdx) : 1;
     const monthlyContrib = annualContrib > 0 ? (annualContrib / 12) * contribFactor : 0;
 
     let mGross = 0, mNet = 0;
@@ -3747,8 +3733,9 @@ function simulate(capital, style, years, opts) {
 }
 
 // ─── DRIP OFF 비교용 ───
-function simulateNoDRIP(capital, style, years) {
-  return simulate(capital, style, years, { enableDRIP: false });
+function simulateNoDRIP(capital, style, years, baseOpts) {
+  var noDripOpts = baseOpts ? Object.assign({}, baseOpts, { enableDRIP: false }) : { enableDRIP: false };
+  return simulate(capital, style, years, noDripOpts);
 }
 
 // ─── 몬테카를로 시뮬레이션 (주가 변동성 기반) ───
@@ -4692,6 +4679,7 @@ function hintSimBtn() {
     _simBtn._pulseTimer = setTimeout(() => _simBtn.classList.remove('pulse'), 4000);
   }
   updateSimSummaryTags();
+  if (simResult) markResultsStale();
 }
 
 // ─── 시뮬 버튼 설정 요약 태그 ───
@@ -4778,7 +4766,7 @@ function _doQuickEstimate() {
     if (_qeEnableDRIP) asset += divNet;
     if (monthlyContrib > 0) {
       const yr = Math.floor(m / 12);
-      asset += monthlyContrib * (contribGrowthRate > 0 && yr > 0 ? Math.pow(1 + contribGrowthRate / 100, yr) : 1);
+      asset += monthlyContrib * (contribGrowthRate !== 0 && yr > 0 ? Math.pow(1 + contribGrowthRate / 100, yr) : 1);
     }
   }
   var finalYield = baseMonthlyYield * Math.pow(1 + _qeDivGrowth, currentPeriod) / (_qePriceGrowth ? Math.pow(1 + _qePriceGrowth, currentPeriod) : 1);
@@ -4787,7 +4775,7 @@ function _doQuickEstimate() {
   var _qeTotalContrib = 0;
   if (annContrib > 0) {
     for (var _qy = 0; _qy < currentPeriod; _qy++) {
-      _qeTotalContrib += annContrib * (contribGrowthRate > 0 ? Math.pow(1 + contribGrowthRate / 100, _qy) : 1);
+      _qeTotalContrib += annContrib * (contribGrowthRate !== 0 ? Math.pow(1 + contribGrowthRate / 100, _qy) : 1);
     }
   }
   const totalInvested = capital + _qeTotalContrib;
@@ -4810,7 +4798,7 @@ function _doQuickEstimate() {
         if (_qeEnableDRIP) a += _dn;
         if (monthlyContrib > 0) {
           const y = Math.floor(m / 12);
-          a += monthlyContrib * (contribGrowthRate > 0 && y > 0 ? Math.pow(1 + contribGrowthRate / 100, y) : 1);
+          a += monthlyContrib * (contribGrowthRate !== 0 && y > 0 ? Math.pow(1 + contribGrowthRate / 100, y) : 1);
         }
       }
       var _fy = baseMonthlyYield * Math.pow(1 + _qeDivGrowth, yr) / (_qePriceGrowth ? Math.pow(1 + _qePriceGrowth, yr) : 1);
@@ -4832,7 +4820,7 @@ function _doQuickEstimate() {
   var _bankAsset = capital * Math.pow(1 + _bankRate, currentPeriod);
   if (annContrib > 0) {
     for (var _by = 0; _by < currentPeriod; _by++) {
-      var _bc = annContrib * (contribGrowthRate > 0 && _by > 0 ? Math.pow(1 + contribGrowthRate / 100, _by) : 1);
+      var _bc = annContrib * (contribGrowthRate !== 0 && _by > 0 ? Math.pow(1 + contribGrowthRate / 100, _by) : 1);
       _bankAsset += _bc * Math.pow(1 + _bankRate, currentPeriod - _by - 1);
     }
   }
@@ -5546,7 +5534,7 @@ function _doSimulation(capital, btn) {
   simResult._capital = capital;
   simResult._period = currentPeriod;
   simResult._style = currentStyle;
-  cachedNoDripResult = simulateNoDRIP(capital, currentStyle, currentPeriod);
+  cachedNoDripResult = simulateNoDRIP(capital, currentStyle, currentPeriod, opts);
   const noDripResult = cachedNoDripResult;
   // 시뮬레이션 결과 있으면 AI 컨텍스트 버튼 표시
   const ctxBtn = document.getElementById('chatCtxBtn');
@@ -5555,7 +5543,15 @@ function _doSimulation(capital, btn) {
   const final = simResult.records[simResult.records.length - 1];
   const finalNoDrip = noDripResult.records[noDripResult.records.length - 1];
   const dripEffect = final.totalAsset - finalNoDrip.totalAsset;
-  const returnRate = ((final.totalAsset - capital) / capital * 100).toFixed(1);
+  // 총 투자금 = 원금 + 누적 적립금 (적립금 성장률 반영)
+  let _totalInvested = capital;
+  if (opts.annualContrib > 0) {
+    for (let _ti = 0; _ti < currentPeriod; _ti++) {
+      _totalInvested += opts.annualContrib * (opts.contribGrowthRate !== 0 ? Math.pow(1 + opts.contribGrowthRate, _ti) : 1);
+    }
+  }
+  simResult._totalInvested = _totalInvested;
+  const returnRate = (_totalInvested > 0 ? ((final.totalAsset - _totalInvested) / _totalInvested * 100) : 0).toFixed(1);
   simResult._returnRate = parseFloat(returnRate);
 
   // 퀵 기간 전환 바
@@ -5852,7 +5848,7 @@ function _doSimulation(capital, btn) {
     let totalContrib = 0;
     if (opts.annualContrib > 0) {
       for (let y = 0; y < currentPeriod; y++) {
-        const factor = (opts.contribGrowthRate > 0) ? Math.pow(1 + opts.contribGrowthRate, y) : 1;
+        const factor = (opts.contribGrowthRate !== 0) ? Math.pow(1 + opts.contribGrowthRate, y) : 1;
         totalContrib += opts.annualContrib * factor;
       }
     }
@@ -6644,7 +6640,7 @@ function _doSimulation(capital, btn) {
         // 해당 연도의 추가 투자금 합산
         let yearContrib = 0;
         if (opts.annualContrib > 0) {
-          const cf = (opts.contribGrowthRate > 0 && y > 1) ? Math.pow(1 + (opts.contribGrowthRate || 0), y - 1) : 1;
+          const cf = (opts.contribGrowthRate !== 0 && y > 1) ? Math.pow(1 + (opts.contribGrowthRate || 0), y - 1) : 1;
           yearContrib = opts.annualContrib * cf;
         }
         // 투자 수익률 = (기말자산 - 기초자산 - 추가투자) / (기초자산 + 추가투자/2) * 100
@@ -7537,7 +7533,9 @@ function renderStyleComparison(capital, years, opts, activeStyle) {
   for (const s of styles) {
     const sim = simulate(capital, s.key, years, opts);
     const f = sim.records[sim.records.length - 1];
-    results[s.key] = { totalAsset: f.totalAsset, mNet: f.mNet, cumNet: f.cumNet, returnRate: ((f.totalAsset - capital) / capital * 100).toFixed(1) };
+    var _scTI = capital;
+    if (opts.annualContrib > 0) { for (var _j = 0; _j < years; _j++) _scTI += opts.annualContrib * (opts.contribGrowthRate !== 0 ? Math.pow(1 + opts.contribGrowthRate, _j) : 1); }
+    results[s.key] = { totalAsset: f.totalAsset, mNet: f.mNet, cumNet: f.cumNet, returnRate: (_scTI > 0 ? ((f.totalAsset - _scTI) / _scTI * 100) : 0).toFixed(1) };
   }
 
   let html = '<div class="sc-row">';
@@ -7720,11 +7718,11 @@ function renderSensitivity(capital, style, years, opts) {
     var mYield = yld / 12;
     for (var m = 0; m < period * 12; m++) {
       var yr = Math.floor(m / 12);
-      var adjYield = mYield * (gRate > 0 && yr > 0 ? Math.pow(1 + gRate / 100, yr) : 1);
+      var adjYield = mYield * (gRate !== 0 && yr > 0 ? Math.pow(1 + gRate / 100, yr) : 1);
       var divNet = asset * adjYield * (1 - taxRate);
       if (drip) asset += divNet;
     }
-    var finalMDiv = asset * mYield * (gRate > 0 ? Math.pow(1 + gRate / 100, period) : 1) * (1 - taxRate);
+    var finalMDiv = asset * mYield * (gRate !== 0 ? Math.pow(1 + gRate / 100, period) : 1) * (1 - taxRate);
     return { asset: asset, mDiv: finalMDiv };
   }
 
@@ -7782,11 +7780,11 @@ function renderCostOfDelay(capital, years, opts, style) {
     var asset = cap;
     for (var m = 0; m < period * 12; m++) {
       var yr = Math.floor(m / 12);
-      var adjY = mYield * (divGrowth > 0 && yr > 0 ? Math.pow(1 + divGrowth / 100, yr) : 1);
+      var adjY = mYield * (divGrowth !== 0 && yr > 0 ? Math.pow(1 + divGrowth / 100, yr) : 1);
       var divNet = asset * adjY * (1 - taxRate);
       if (dripOn) asset += divNet;
     }
-    var finalY = mYield * (divGrowth > 0 ? Math.pow(1 + divGrowth / 100, period) : 1);
+    var finalY = mYield * (divGrowth !== 0 ? Math.pow(1 + divGrowth / 100, period) : 1);
     return { asset: asset, mDiv: asset * finalY * (1 - taxRate) };
   }
 
@@ -8885,7 +8883,8 @@ function buildResultCanvas() {
   if (!simResult) return null;
   const final = simResult.records[simResult.records.length - 1];
   const capital = getAmount();
-  const returnRate = ((final.totalAsset - capital) / capital * 100).toFixed(1);
+  const _brcTI = simResult._totalInvested || capital;
+  const returnRate = (_brcTI > 0 ? ((final.totalAsset - _brcTI) / _brcTI * 100) : 0).toFixed(1);
   const applyTax = _taxToggle.checked;
 
   const W = 720;
@@ -8931,7 +8930,7 @@ function buildResultCanvas() {
     { label: `${currentPeriod}년 후 총 자산`, value: fmtKRW(final.totalAsset), sub: `+${returnRate}% 수익률`, color: '#FFD700' },
     { label: '월 배당금 (세후)', value: fmtKRW(final.mNet), sub: `세전 ${fmtKRW(final.mGross)}`, color: '#fff' },
     { label: '누적 배당금', value: fmtKRW(final.cumNet), sub: `세전 ${fmtKRW(final.cumGross)}`, color: '#fff' },
-    { label: 'DRIP 효과', value: `+${fmtKRW(final.totalAsset - simulateNoDRIP(capital, currentStyle, currentPeriod).records.slice(-1)[0].totalAsset)}`, sub: '미재투자 대비', color: '#4CAF50' }
+    { label: 'DRIP 효과', value: `+${fmtKRW(final.totalAsset - (cachedNoDripResult ? cachedNoDripResult.records.slice(-1)[0].totalAsset : final.totalAsset))}`, sub: '미재투자 대비', color: '#4CAF50' }
   ];
 
   const cardW = 300, cardH = 110, gap = 20, startX = (W - cardW*2 - gap) / 2, startY = 155;
@@ -9060,7 +9059,8 @@ function copyResultText() {
   const final = simResult.records[simResult.records.length - 1];
   const capital = getAmount();
   const styleNames = { conservative: '안정형', balanced: '균형형', aggressive: '공격형' };
-  const returnRate = ((final.totalAsset - capital) / capital * 100).toFixed(1);
+  const _crtTI = simResult._totalInvested || capital;
+  const returnRate = (_crtTI > 0 ? ((final.totalAsset - _crtTI) / _crtTI * 100) : 0).toFixed(1);
   const cagrVal = capital > 0 && currentPeriod > 0 ? ((Math.pow(final.totalAsset / capital, 1 / currentPeriod) - 1) * 100).toFixed(1) : '0';
   // 적용된 옵션 수집
   const applyTax = _taxToggle.checked;
@@ -9292,7 +9292,8 @@ function exportPDF() {
   var capital = getAmount();
   var styleNames = { conservative: '안정형', balanced: '균형형', aggressive: '공격형' };
   var styleName = styleNames[currentStyle] || currentStyle;
-  var returnRate = capital > 0 ? ((final.totalAsset - capital) / capital * 100).toFixed(1) : '0';
+  var _pdfTI = simResult._totalInvested || capital;
+  var returnRate = _pdfTI > 0 ? ((final.totalAsset - _pdfTI) / _pdfTI * 100).toFixed(1) : '0';
   var cagrVal = capital > 0 && currentPeriod > 0 ? ((Math.pow(final.totalAsset / capital, 1 / currentPeriod) - 1) * 100).toFixed(1) : '0';
   // 옵션 수집
   var applyTax = _taxToggle.checked;
@@ -10443,7 +10444,8 @@ function saveToHistory(capital, style, period, finalAsset, monthlyDiv, cumDiv) {
     const yearly = simResult.records.filter(r => r.month % 12 === 0).map(r => ({
       year: r.year, asset: r.totalAsset, div: r.mNet, divGross: r.mGross, cumDiv: r.cumNet
     }));
-    const returnRate = ((finalAsset - capital) / capital * 100).toFixed(1);
+    const _hTI = simResult._totalInvested || capital;
+    const returnRate = (_hTI > 0 ? ((finalAsset - _hTI) / _hTI * 100) : 0).toFixed(1);
 
     history.unshift({
       date: dateStr, capital, style: styleNames[style] || style, period,
@@ -13445,9 +13447,15 @@ function renderResultPeriodBar() {
   el.style.display = '';
 }
 
+function markResultsStale() {
+  var banner = document.getElementById('staleBanner');
+  if (banner) banner.classList.add('visible');
+}
 function clearResultsStale() {
   var el = document.getElementById('results');
   if (el) el.classList.remove('stale');
+  var banner = document.getElementById('staleBanner');
+  if (banner) banner.classList.remove('visible');
 }
 
 function updateInputMiniSummary() {
